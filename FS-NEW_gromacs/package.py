@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Template package file"""
-__title__ = 'template_project'
+__title__ = 'FS-NEW_gromacs'
 __version__ = '0.1'
-__author__ = 'Simone Marsili'
+__author__ = 'Maurice Karrenbrock'
 __summary__ = ''
-__url__ = 'https://github.com/simomarsili/template_project'
-__email__ = 'simo.marsili@gmail.com'
-__license__ = 'BSD 3-Clause'
-__copyright__ = 'Copyright (c) 2020, Simone Marsili'
+__url__ = ''
+__email__ = ''
+__license__ = 'AGPL v3.0'
+__copyright__ = 'Copyright (c) 2020, Maurice Karrenbrock'
 __classifiers__ = [
     'Development Status :: 1 - Planning',
     'License :: OSI Approved :: BSD License',
