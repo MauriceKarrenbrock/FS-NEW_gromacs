@@ -8,7 +8,7 @@
 """Functions to change or extract gro files
 """
 
-import subprocess
+import PythonAuxiliaryFunctions.Run as Run
 
 
 def extract_gro_from_xtc(xtc_file,
@@ -49,6 +49,10 @@ def extract_gro_from_xtc(xtc_file,
         the gromacs executable to use
         (absolute path)
         defauld "gmx"
+
+    Notes
+    -----------
+    This function uses your UNIX shell and specifically `echo` and `|` commands
     """
 
     if output_gro[-4:] != '.gro':
@@ -61,19 +65,12 @@ def extract_gro_from_xtc(xtc_file,
     if last_frame_ps != -1:
         string += f'-e {last_frame_ps}'
 
-    r = subprocess.run(string,
+    error = 'Could not extract configurations, look at stderr stdout printed above'
+
+    Run.subprocess_run(commands=string,
                        shell=True,
-                       stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE,
-                       check=False)
-
-    print(r.stdout)
-    print(r.stderr)
-
-    if r.returncode != 0:
-        raise RuntimeError(
-            'Could not extract configurations, look at stderr stdout printed above'
-        )
+                       universal_newlines=True,
+                       error_string=error)
 
 
 def add_atom_to_gro_file(input_gro_file,
