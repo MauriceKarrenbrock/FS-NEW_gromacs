@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Template package file"""
-__title__ = 'FS-NEW_gromacs'
+__title__ = 'FSDAMGromacs'
 __version__ = '0.1'
 __author__ = 'Maurice Karrenbrock'
 __summary__ = ''

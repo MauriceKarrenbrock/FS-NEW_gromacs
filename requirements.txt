@@ -1,2 +1,1 @@
-# packageA
-# packageB
+git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git
