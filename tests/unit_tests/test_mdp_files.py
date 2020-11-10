@@ -1,134 +1,101 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=missing-docstring
+# pylint: disable=redefined-outer-name
+# pylint: disable=no-self-use
+# pylint: disable=protected-access
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
 # This software is open-source and is distributed under the #
 # BSD 3-Clause "New" or "Revised" License                   #
 #############################################################
-"""Classes to create the mdp files for NE alchemical transformation
 
-Creation and annihilation of VdW (Van der Waals contribution)
-and Q (charges)
-"""
-
-import PythonAuxiliaryFunctions.files_IO.write_file as write_file
+import FSDAMGromacs.mdp_files as mdp_files
 
 
-class MdpFile(object):
-    """Super class for MDP file creation 4 alchemical transformations
+class TestMdpFile():
+    def test_init(self):
 
-    Interface for MDP creation classes for alchemical
-    transformations
+        mdp_file = 'mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = ['a', 'b', 'c']
 
-    Attributes
-    -----------
-    _template : list
-        Private, list of strings of the template
-        that will be written on the mdp file
-        ("\n" new line caracters may be missing)
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups)
 
-    Parameters
-    ----------
-    mdp_file : str
-        the name of the output mdp file (or the path)
-    alchemical_molecule : str
-        the residue name (resname) or gromacs group
-        (System, Protein, Other, ...) that identifies
-        the alchemical atoms/molecules
-    timestep_ps : float
-        the timestep of the MD run (ps)
-        default 0.001
-    number_of_steps : int
-        number of MD steps
-        default 1000000
-    temperature : float
-        temperature in Kelvin (K)
-    lambda_steps : float, optional
-        DON'T USE IF NOT SURE OF WHAT YOU ARE DOING
-        default will be good 99% of the times.
-        how much for each step should the achemical
-        parameter (lambda) increase/decrease,
-        default (if None) each subclass will have its default
-        usually `lambda_steps`= +/- 1/`number_of_steps`
-        in order to have a complete creation/annihilation
-        of the alchemical molecule (it is subclass dependent)
-    COM_pull_goups : list of strings
-        the list of gromacs groups (System,Protein,<ligand_resname>,...)
-        that will have an harmonic COM-COM (center of mass) constrain
-        Usually for unbound state no pulling is needed (default)
-        for bound state it is ["Protein", "<ligand residue name>", "<dummy heavy atom>"]
+        output = [
+            instance.mdp_file, instance.alchemical_molecule,
+            instance.timestep_ps, instance.number_of_steps,
+            instance.temperature, instance.lambda_steps,
+            instance.COM_pull_goups, instance._template
+        ]
 
+        expected = [
+            mdp_file + '.mdp', alchemical_molecule, timestep_ps,
+            number_of_steps, temperature, lambda_steps, COM_pull_goups, []
+        ]
 
-    Methods
-    ---------
-    execute()
-        the only pubblic method, writes the mdp file
-        with the right template
+        assert output == expected
 
-    Notes
-    -----------
-    `COM_pull_goups` in the bound state may need a dummy heavy atom
-    (no LJ nor Q but infinite mass) because
-    COM COM pulling in gromacs crashes because of poor PBC implemetation if the protein
-    crosses the box
-    """
-    def __init__(self,
-                 mdp_file,
-                 alchemical_molecule,
-                 timestep_ps=0.001,
-                 number_of_steps=1000000,
-                 temperature=298.15,
-                 lambda_steps=None,
-                 COM_pull_goups=None):
+    def test__create_COMCOM_pulling_strings_None(self):
 
-        if mdp_file[-4:] != '.mdp':
-            mdp_file += '.mdp'
+        mdp_file = 'mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
 
-        self.mdp_file = mdp_file
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups)
 
-        self.alchemical_molecule = alchemical_molecule
+        assert instance._create_COMCOM_pulling_strings() == ''
 
-        self.timestep_ps = timestep_ps
+    def test__create_COMCOM_pulling_strings_empty_list(self):
 
-        self.number_of_steps = number_of_steps
+        mdp_file = 'mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = []
 
-        self.temperature = temperature
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups)
 
-        self.lambda_steps = lambda_steps
+        assert instance._create_COMCOM_pulling_strings() == ''
 
-        self.COM_pull_goups = COM_pull_goups
+    def test__create_COMCOM_pulling_strings_works(self):
 
-        self._template = []
+        mdp_file = 'mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = ['DU1', 'Protein', 'DU2']
 
-    def _hook(self):
-        """a hook for subclasses
-        """
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups)
 
-    def _create_COMCOM_pulling_strings(self):
-        """Private creates the strings for COM-COM pulling
-
-        Returns
-        ----------
-        string
-            will return an empty string if `self.COM_pull_goups` is empty or None
-        """
-
-        if self.COM_pull_goups is None:
-            return ''
-        elif len(self.COM_pull_goups) == 0:
-            return ''
-
-        pull_ngroups = len(self.COM_pull_goups)
-
-        pull_group_name = ''
-        for i, group in enumerate(self.COM_pull_goups):
-            pull_group_name += f'pull-group{i + 1}-name        = {group}\n'
-
-        COM_pulling_strings = [
+        expected_output = [
             ';COM PULLING', 'pull                     = yes',
             'pull-print-com           = yes', 'pull-ncoords            = 2',
             'pull-nstxout            = 10',
-            f'pull-ngroups            = {pull_ngroups}', f'{pull_group_name}',
+            f'pull-ngroups            = {len(COM_pull_goups)}',
+            f'pull-group1-name        = {COM_pull_goups[0]}\n' +
+            f'pull-group2-name        = {COM_pull_goups[1]}\n' +
+            f'pull-group3-name        = {COM_pull_goups[2]}\n',
             'pull-pbc-ref-prev-step-com  = yes',
             'pull-group1-pbcatom     = 2373',
             'pull-coord1-geometry    = distance',
@@ -143,61 +110,98 @@ class MdpFile(object):
             'pull-coord2-rate       = 0', 'pull-coord2-k          = 120'
         ]
 
-        return COM_pulling_strings
+        assert instance._create_COMCOM_pulling_strings() == expected_output
 
-    def _get_template(self):
-        """PRIVATE the template to write on MDP file
+    def test_get_template(self):
 
-        Returns
-        ----------
-        tempalte : list
-            list of strings with final newline
-            already added ("\n")
-        """
+        mdp_file = 'mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = ['DU1', 'Protein', 'DU2']
 
-        for i in range(len(self._template)):
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups)
 
-            if self._template[i][-1] != '\n':
+        instance._template = ['AAAAA', 'BBBBB\n', 'ccccc']
 
-                self._template[i] += '\n'
+        expected = ['AAAAA\n', 'BBBBB\n', 'ccccc\n']
 
-        return self._template
+        assert instance._get_template() == expected
 
-    def _write_template(self, template):
-        """PRIVATE writes the template on a file
-        """
+    def test_write_template(self, mocker):
 
-        write_file.write_file(template, self.mdp_file)
+        mocked_write = mocker.patch(
+            'PythonAuxiliaryFunctions.files_IO.write_file.write_file')
 
-    def execute(self):
-        """writes the mdp
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = ['DU1', 'Protein', 'DU2']
 
-        it is the only pubblic method of the class
-        and writes you the mdp file
-        """
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups)
 
-        #a hook for the subclasses
-        self._hook()
+        instance._write_template(['template'])
 
-        template = self._get_template()
+        mocked_write.assert_called_once_with(['template'], mdp_file)
 
-        self._write_template(template=template)
+    def test_execute(self, mocker):
+
+        m_hook = mocker.patch.object(mdp_files.MdpFile, '_hook')
+        m_get = mocker.patch.object(mdp_files.MdpFile, '_get_template')
+        m_write = mocker.patch.object(mdp_files.MdpFile, '_write_template')
+
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = ['DU1', 'Protein', 'DU2']
+
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups)
+
+        instance.execute()
+
+        m_hook.assert_called_once()
+        m_get.assert_called_once()
+        m_write.assert_called_once()
 
 
-class AnnihilateVdwMdpBoundState(MdpFile):
-    """Creates mdp for VdW annihilation
+class TestAnnihilateVdwMdpBoundState():
+    def test__create_template(self, mocker):
 
-    Remember to first annihilate the charges Q with
-    `AnnihilateQMdpBoundState` class!
-    See `MdpFile` class (the superclass) documentation
-    """
-    def _create_template(self):
-        """PRIVATE creates the template
+        mocked_COM = mocker.patch.object(mdp_files.AnnihilateVdwMdpBoundState,
+                                         '_create_COMCOM_pulling_strings',
+                                         return_value=['COM'])
 
-        it modifies self._template
-        """
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
 
-        self._template = [
+        instance = mdp_files.AnnihilateVdwMdpBoundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._create_template()
+
+        mocked_COM.assert_called_once()
+
+        expected_mdp = [
             '; VARIOUS PREPROCESSING OPTIONS',
             '; Preprocessor information: use cpp syntax.',
             '; e.g.: -I/home/joe/doe -I/home/mary/roe',
@@ -206,8 +210,8 @@ class AnnihilateVdwMdpBoundState(MdpFile):
             'define                   =', '', '; RUN CONTROL PARAMETERS',
             'integrator               = md', '; Start time and timestep in ps',
             'tinit                    = 0',
-            f'dt                       = {self.timestep_ps}',
-            f'nsteps                   = {self.number_of_steps}',
+            f'dt                       = {timestep_ps}',
+            f'nsteps                   = {number_of_steps}',
             '; For exact run continuation or redoing part of a run',
             'init-step                = 0',
             '; Part index is updated automatically on checkpointing (keeps files separate)',
@@ -280,8 +284,7 @@ class AnnihilateVdwMdpBoundState(MdpFile):
             'tc-grps                  = System',
             '; Time constant (ps) and reference temperature (K)',
             'tau-t                    = 0.2',
-            f'ref-t                    = {self.temperature}',
-            '; pressure coupling',
+            f'ref-t                    = {temperature}', '; pressure coupling',
             'pcoupl                   = Parrinello-Rahman',
             'pcoupltype               = Isotropic',
             'nstpcouple               = -1',
@@ -314,39 +317,87 @@ class AnnihilateVdwMdpBoundState(MdpFile):
             '; Convert harmonic bonds to morse potentials',
             'morse                    = no', '', '; Free energy control stuff',
             'free-energy              = yes', 'init-lambda              = 1',
-            f'delta-lambda             = {self.lambda_steps}',
-            f'couple-moltype           = {self.alchemical_molecule}',
+            f'delta-lambda             = {lambda_steps}',
+            f'couple-moltype           = {alchemical_molecule}',
             'couple-lambda0           =none', 'couple-lambda1           =vdw',
             'couple-intramol          =no', 'sc-alpha                 = 0.0',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', ''
+            'sc-power                 = 1', '', 'COM'
         ]
 
-        self._template += self._create_COMCOM_pulling_strings()
+        assert instance._template == expected_mdp
 
-    def _hook(self):
-        """defines self.lambda_steps if left None & creates self._template
-        """
+    def test_hook_lambda_None(self, mocker):
 
-        if self.lambda_steps is None:
-            self.lambda_steps = -1. / self.number_of_steps
+        mocked_template = \
+            mocker.patch.object(mdp_files.AnnihilateVdwMdpBoundState, '_create_template')
 
-        self._create_template()
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
+
+        instance = mdp_files.AnnihilateVdwMdpBoundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._hook()
+
+        mocked_template.assert_called_once()
+
+        assert instance.lambda_steps == (-1. / number_of_steps)
+
+    def test_hook_lambda_input(self, mocker):
+
+        mocked_template = \
+            mocker.patch.object(mdp_files.AnnihilateVdwMdpBoundState, '_create_template')
+
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = 33
+        COM_pull_goups = None
+
+        instance = mdp_files.AnnihilateVdwMdpBoundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._hook()
+
+        mocked_template.assert_called_once()
+
+        assert instance.lambda_steps == lambda_steps
 
 
-class AnnihilateQMdpBoundState(MdpFile):
-    """Creates mdp for Q annihilation
+class TestAnnihilateQMdpBoundState():
+    def test__create_template(self, mocker):
 
-    annihilates charges
-    See `MdpFile` class (the superclass) documentation
-    """
-    def _create_template(self):
-        """PRIVATE creates the template
+        mocked_COM = mocker.patch.object(mdp_files.AnnihilateQMdpBoundState,
+                                         '_create_COMCOM_pulling_strings',
+                                         return_value=['COM'])
 
-        it modifies self._template
-        """
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
 
-        self._template = [
+        instance = mdp_files.AnnihilateQMdpBoundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._create_template()
+
+        mocked_COM.assert_called_once()
+
+        expected_mdp = [
             '; VARIOUS PREPROCESSING OPTIONS',
             '; Preprocessor information: use cpp syntax.',
             '; e.g.: -I/home/joe/doe -I/home/mary/roe',
@@ -355,8 +406,8 @@ class AnnihilateQMdpBoundState(MdpFile):
             'define                   =', '', '; RUN CONTROL PARAMETERS',
             'integrator               = md', '; Start time and timestep in ps',
             'tinit                    = 0',
-            f'dt                       = {self.timestep_ps}',
-            f'nsteps                   = {self.number_of_steps}',
+            f'dt                       = {timestep_ps}',
+            f'nsteps                   = {number_of_steps}',
             '; For exact run continuation or redoing part of a run',
             'init-step                = 0',
             '; Part index is updated automatically on checkpointing (keeps files separate)',
@@ -429,8 +480,7 @@ class AnnihilateQMdpBoundState(MdpFile):
             'tc-grps                  = System',
             '; Time constant (ps) and reference temperature (K)',
             'tau-t                    = 0.2',
-            f'ref-t                    = {self.temperature}',
-            '; pressure coupling',
+            f'ref-t                    = {temperature}', '; pressure coupling',
             'pcoupl                   = Parrinello-Rahman',
             'pcoupltype               = Isotropic',
             'nstpcouple               = -1',
@@ -463,38 +513,87 @@ class AnnihilateQMdpBoundState(MdpFile):
             '; Convert harmonic bonds to morse potentials',
             'morse                    = no', '', '; Free energy control stuff',
             'free-energy              = yes', 'init-lambda              = 1',
-            f'delta-lambda             = {self.lambda_steps}',
-            f'couple-moltype           = {self.alchemical_molecule}',
+            f'delta-lambda             = {lambda_steps}',
+            f'couple-moltype           = {alchemical_molecule}',
             'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
             'couple-intramol          =no', 'sc-alpha                 = 0.0',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', ''
+            'sc-power                 = 1', '', 'COM'
         ]
 
-        self._template += self._create_COMCOM_pulling_strings()
+        assert instance._template == expected_mdp
 
-    def _hook(self):
-        """defines self.lambda_steps if left None & creates self._template
-        """
+    def test_hook_lambda_None(self, mocker):
 
-        if self.lambda_steps is None:
-            self.lambda_steps = -1. / self.number_of_steps
+        mocked_template = \
+            mocker.patch.object(mdp_files.AnnihilateQMdpBoundState, '_create_template')
 
-        self._create_template()
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
+
+        instance = mdp_files.AnnihilateQMdpBoundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._hook()
+
+        mocked_template.assert_called_once()
+
+        assert instance.lambda_steps == (-1. / number_of_steps)
+
+    def test_hook_lambda_input(self, mocker):
+
+        mocked_template = \
+            mocker.patch.object(mdp_files.AnnihilateQMdpBoundState, '_create_template')
+
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = 33
+        COM_pull_goups = None
+
+        instance = mdp_files.AnnihilateQMdpBoundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._hook()
+
+        mocked_template.assert_called_once()
+
+        assert instance.lambda_steps == lambda_steps
 
 
-class CreateVdwMdpUnboundState(MdpFile):
-    """Creates mdp for VdW creation
+class TestCreateVdwMdpUnboundState():
+    def test__create_template(self, mocker):
 
-    See `MdpFile` class (the superclass) documentation
-    """
-    def _create_template(self):
-        """PRIVATE creates the template
+        mocked_COM = mocker.patch.object(mdp_files.CreateVdwMdpUnboundState,
+                                         '_create_COMCOM_pulling_strings',
+                                         return_value=['COM'])
 
-        it modifies self._template
-        """
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
 
-        self._template = [
+        instance = mdp_files.CreateVdwMdpUnboundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._create_template()
+
+        mocked_COM.assert_called_once()
+
+        expected_mdp = [
             '; VARIOUS PREPROCESSING OPTIONS',
             '; Preprocessor information: use cpp syntax.',
             '; e.g.: -I/home/joe/doe -I/home/mary/roe',
@@ -503,8 +602,8 @@ class CreateVdwMdpUnboundState(MdpFile):
             'define                   =', '', '; RUN CONTROL PARAMETERS',
             'integrator               = md', '; Start time and timestep in ps',
             'tinit                    = 0',
-            f'dt                       = {self.timestep_ps}',
-            f'nsteps                   = {self.number_of_steps}',
+            f'dt                       = {timestep_ps}',
+            f'nsteps                   = {number_of_steps}',
             '; For exact run continuation or redoing part of a run',
             'init-step                = 0',
             '; Part index is updated automatically on checkpointing (keeps files separate)',
@@ -576,8 +675,7 @@ class CreateVdwMdpUnboundState(MdpFile):
             'tc-grps                  = System',
             '; Time constant (ps) and reference temperature (K)',
             'tau-t                    = 0.2',
-            f'ref-t                    = {self.temperature}',
-            '; pressure coupling',
+            f'ref-t                    = {temperature}', '; pressure coupling',
             'pcoupl                   = Parrinello-Rahman',
             'pcoupltype               = Isotropic',
             'nstpcouple               = -1',
@@ -610,39 +708,87 @@ class CreateVdwMdpUnboundState(MdpFile):
             '; Convert harmonic bonds to morse potentials',
             'morse                    = no', '', '; Free energy control stuff',
             'free-energy              = yes', 'init-lambda              = 0',
-            f'delta-lambda             = {self.lambda_steps}',
-            f'couple-moltype           = {self.alchemical_molecule}',
+            f'delta-lambda             = {lambda_steps}',
+            f'couple-moltype           = {alchemical_molecule}',
             'couple-lambda0           =none', 'couple-lambda1           =vdw',
             'couple-intramol          =no', 'sc-alpha                 = 0.5',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', ''
+            'sc-power                 = 1', '', 'COM'
         ]
 
-        self._template += self._create_COMCOM_pulling_strings()
+        assert instance._template == expected_mdp
 
-    def _hook(self):
-        """defines self.lambda_steps if left None & creates self._template
-        """
+    def test_hook_lambda_None(self, mocker):
 
-        if self.lambda_steps is None:
-            self.lambda_steps = 1. / self.number_of_steps
+        mocked_template = \
+            mocker.patch.object(mdp_files.CreateVdwMdpUnboundState, '_create_template')
 
-        self._create_template()
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
+
+        instance = mdp_files.CreateVdwMdpUnboundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._hook()
+
+        mocked_template.assert_called_once()
+
+        assert instance.lambda_steps == (1. / number_of_steps)
+
+    def test_hook_lambda_input(self, mocker):
+
+        mocked_template = \
+            mocker.patch.object(mdp_files.CreateVdwMdpUnboundState, '_create_template')
+
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = 33
+        COM_pull_goups = None
+
+        instance = mdp_files.CreateVdwMdpUnboundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._hook()
+
+        mocked_template.assert_called_once()
+
+        assert instance.lambda_steps == lambda_steps
 
 
-class CreateQMdpUnboundState(MdpFile):
-    """Creates mdp for Q creation
-    creates charges
-    REMEMBER TO FIRST CREATE VdW with `CreateVdwMdpUnboundState`
-    See `MdpFile` class (the superclass) documentation
-    """
-    def _create_template(self):
-        """PRIVATE creates the template
+class TestCreateQMdpUnboundState():
+    def test__create_template(self, mocker):
 
-        it modifies self._template
-        """
+        mocked_COM = mocker.patch.object(mdp_files.CreateQMdpUnboundState,
+                                         '_create_COMCOM_pulling_strings',
+                                         return_value=['COM'])
 
-        self._template = [
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
+
+        instance = mdp_files.CreateQMdpUnboundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._create_template()
+
+        mocked_COM.assert_called_once()
+
+        expected_mdp = [
             '; VARIOUS PREPROCESSING OPTIONS',
             '; Preprocessor information: use cpp syntax.',
             '; e.g.: -I/home/joe/doe -I/home/mary/roe',
@@ -651,8 +797,8 @@ class CreateQMdpUnboundState(MdpFile):
             'define                   =', '', '; RUN CONTROL PARAMETERS',
             'integrator               = md', '; Start time and timestep in ps',
             'tinit                    = 0',
-            f'dt                       = {self.timestep_ps}',
-            f'nsteps                   = {self.number_of_steps}',
+            f'dt                       = {timestep_ps}',
+            f'nsteps                   = {number_of_steps}',
             '; For exact run continuation or redoing part of a run',
             'init-step                = 0',
             '; Part index is updated automatically on checkpointing (keeps files separate)',
@@ -724,8 +870,7 @@ class CreateQMdpUnboundState(MdpFile):
             'tc-grps                  = System',
             '; Time constant (ps) and reference temperature (K)',
             'tau-t                    = 0.2',
-            f'ref-t                    = {self.temperature}',
-            '; pressure coupling',
+            f'ref-t                    = {temperature}', '; pressure coupling',
             'pcoupl                   = Parrinello-Rahman',
             'pcoupltype               = Isotropic',
             'nstpcouple               = -1',
@@ -758,21 +903,58 @@ class CreateQMdpUnboundState(MdpFile):
             '; Convert harmonic bonds to morse potentials',
             'morse                    = no', '', '; Free energy control stuff',
             'free-energy              = yes', 'init-lambda              = 0',
-            f'delta-lambda             = {self.lambda_steps}',
-            f'couple-moltype           = {self.alchemical_molecule}',
+            f'delta-lambda             = {lambda_steps}',
+            f'couple-moltype           = {alchemical_molecule}',
             'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
             'couple-intramol          =no', 'sc-alpha                 = 0.5',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', ''
+            'sc-power                 = 1', '', 'COM'
         ]
 
-        self._template += self._create_COMCOM_pulling_strings()
+        assert instance._template == expected_mdp
 
-    def _hook(self):
-        """defines self.lambda_steps if left None & creates self._template
-        """
+    def test_hook_lambda_None(self, mocker):
 
-        if self.lambda_steps is None:
-            self.lambda_steps = 1. / self.number_of_steps
+        mocked_template = \
+            mocker.patch.object(mdp_files.CreateQMdpUnboundState, '_create_template')
 
-        self._create_template()
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
+
+        instance = mdp_files.CreateQMdpUnboundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._hook()
+
+        mocked_template.assert_called_once()
+
+        assert instance.lambda_steps == (1. / number_of_steps)
+
+    def test_hook_lambda_input(self, mocker):
+
+        mocked_template = \
+            mocker.patch.object(mdp_files.CreateQMdpUnboundState, '_create_template')
+
+        mdp_file = 'mdp.mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = 33
+        COM_pull_goups = None
+
+        instance = mdp_files.CreateQMdpUnboundState(
+            mdp_file, alchemical_molecule, timestep_ps, number_of_steps,
+            temperature, lambda_steps, COM_pull_goups)
+
+        instance._hook()
+
+        mocked_template.assert_called_once()
+
+        assert instance.lambda_steps == lambda_steps

@@ -8,6 +8,9 @@
 """functions to deal with TOP files
 """
 
+import PythonAuxiliaryFunctions.files_IO.read_file as read_file
+import PythonAuxiliaryFunctions.files_IO.write_file as write_file
+
 
 def add_include(include_line, input_top_file, output_top_file):
     """adds an include statement after the FF one
@@ -22,24 +25,20 @@ def add_include(include_line, input_top_file, output_top_file):
         can be the same as the input one
     """
 
-    with open(input_top_file, 'r') as f:
-
-        input_top_lines = f.readlines()
+    input_top_lines = read_file.read_file(input_top_file)
 
     for i in range(len(input_top_lines)):
 
-        if not (input_top_lines[i].strip() != ''
-                or input_top_lines[i].strip()[0] != ';'):
+        if input_top_lines[i].strip() != '':
+            if input_top_lines[i].strip()[0] != ';':
 
-            if input_top_lines[i].strip()[0:8] == '#include':
+                if input_top_lines[i].strip()[0:8] == '#include':
 
-                input_top_lines[i] += f'\n#include "{include_line}"\n'
+                    input_top_lines[i] += f'\n#include "{include_line}"\n'
 
-                break
+                    break
 
-    with open(output_top_file, 'w') as f:
-
-        f.writelines(input_top_lines)
+    write_file.write_file(input_top_lines, output_top_file)
 
 
 def add_molecules(name, number, input_top_file, output_top_file):
@@ -56,12 +55,8 @@ def add_molecules(name, number, input_top_file, output_top_file):
         can be the same as the input one
     """
 
-    with open(input_top_file, 'r') as f:
+    input_top_lines = read_file.read_file(input_top_file)
 
-        input_top_lines = f.readlines()
+    input_top_lines.append(f'\n{name}     {number}\n')
 
-    input_top_lines[-1] += f'{name}     {number}\n'
-
-    with open(output_top_file, 'w') as f:
-
-        f.writelines(input_top_lines)
+    write_file.write_file(input_top_lines, output_top_file)

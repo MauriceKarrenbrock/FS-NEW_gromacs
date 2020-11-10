@@ -16,7 +16,7 @@ def make_tpr_file(mdp_file, gro_file, top_file, tpr_file, gromacs_path='gmx'):
 
     it calls gromacs to make a tpr file locally
     if you want to use gromacs in another computer
-    (ex an HPC cluster) this may not be the right function
+    (ex: an HPC cluster) this may not be the right function
     because it is better to create the tpr on the machine
     you will do the run
 
@@ -31,7 +31,7 @@ def make_tpr_file(mdp_file, gro_file, top_file, tpr_file, gromacs_path='gmx'):
     tpr_file : str
         the ABSOLUTE PATH where to save the output file
     gromacs_path : str
-        the ABSOLUTE PATH where to the gromacs executable
+        the ABSOLUTE PATH to the gromacs executable
         (default gmx)
     """
 
