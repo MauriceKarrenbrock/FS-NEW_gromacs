@@ -8,7 +8,7 @@
 """functions to create tpr files
 """
 
-import PythonAuxiliaryFunctions.Run as Run
+import PythonAuxiliaryFunctions.run as run
 
 
 def make_tpr_file(mdp_file, gro_file, top_file, tpr_file, gromacs_path='gmx'):
@@ -42,7 +42,7 @@ def make_tpr_file(mdp_file, gro_file, top_file, tpr_file, gromacs_path='gmx'):
 
     error = 'Could not create the TPR file, check the stdout and stderr printed above for more info'
 
-    Run.subprocess_run(commands=command,
+    run.subprocess_run(commands=command,
                        shell=False,
                        universal_newlines=True,
                        error_string=error)

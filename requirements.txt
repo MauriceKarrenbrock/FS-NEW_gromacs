@@ -1,1 +1,1 @@
-git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git
+git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git #PythonAuxiliaryFunctions
