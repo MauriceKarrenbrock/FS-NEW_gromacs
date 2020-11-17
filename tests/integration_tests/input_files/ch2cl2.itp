@@ -1,0 +1,81 @@
+; Atomic types, masses and charges (au) are defined below
+; N.B.: use maxwarn 100 to ignore 'Overriding atomtypes'
+; N.B: SIGMA is in nm and EPSILON in kj mol-1
+
+[ atomtypes ]
+;NAME   AT.NUM  MASS     CHARGE  PTYPE  SIGMA   EPSILON
+c2         6    12.010    -0.070   A     0.3315   0.4134
+hc         1     1.008     0.165   A     0.2600   0.0870
+cl        17    35.450    -0.095   A     0.3466   1.1037
+c2         6    12.010    -0.070   A     0.3315   0.4134
+hc         1     1.008     0.165   A     0.2600   0.0870
+cl        17    35.450    -0.095   A     0.3466   1.1037
+
+
+; Molecule topology/parameters starts below
+[ moleculetype ]
+; Name               nrexcl
+  input_smi-g                  3
+
+
+; Atomic types, pdb names  and groups are defined below
+
+[ atoms ]
+;AT.NUM   TYPE   RESID   RESNAME PDB-NAME  IGRP    CHRGE    MASS
+     1     c2       1      LIG     c01      1    -0.0702    12.0100
+     2     hc       1      LIG     h01      1     0.1653     1.0080
+     3     cl       1      LIG     cl01     1    -0.0951    35.4500
+     4     c2       1      LIG     c02      2    -0.0701    12.0100
+     5     hc       1      LIG     h02      2     0.1653     1.0080
+     6     cl       1      LIG     cl02     2    -0.0952    35.4500
+
+
+; Stretching parameters are defined below
+
+[ bonds ]
+;   I1    I2  TYPE      r0(nm)   K(kJ/nm^2/mol)
+     1     4     1      0.1334     201597.673
+     1     3     1      0.1731      80625.680
+     1     2     1      0.1087     164791.025
+     4     6     1      0.1731      80625.680
+     4     5     1      0.1087     164791.025
+
+
+; Bending parameters are defined below
+
+[ angles ]
+;   I1    I2    I3  TYPE    theta(deg)  K(kJ/rad^2/mol)
+     1     4     6     1      123.11      302.63291
+     1     4     5     1      119.70      211.40497
+     2     1     4     1      119.70      211.40497
+     2     1     3     1      113.36      234.47136
+     3     1     4     1      123.11      302.63291
+     5     4     6     1      113.36      234.47136
+
+
+; Proper Torsion parameters are defined below
+
+[ dihedrals ]
+;   I1    I2    I3    I4   TYPE   theta(deg) K(kJ/rad^2/mol)     N
+     2     1     4     6     1    180.0000     27.8236           2
+     2     1     4     5     1    180.0000     27.8236           2
+     3     1     4     6     1    180.0000     27.8236           2
+     3     1     4     5     1    180.0000     27.8236           2
+
+
+; (fudged) 14-nonbonded pairs are defined below
+
+[ pairs ]
+;   I1   I4
+    2    6
+    2    5
+    3    6
+    3    5
+
+
+; ImProper Torsion parameters are defined below
+
+[ dihedrals ]
+;   I1    I2    I3    I4   TYPE   theta(deg) K(kJ/rad^2/mol)     N
+     1     3     4     2     1    180.0000      4.6024           2
+     4     6     1     5     1    180.0000      4.6024           2

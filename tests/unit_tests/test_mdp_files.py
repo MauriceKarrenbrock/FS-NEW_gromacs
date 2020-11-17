@@ -3,12 +3,15 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=no-self-use
 # pylint: disable=protected-access
+# pylint: disable=duplicate-code
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
 # This software is open-source and is distributed under the #
 # BSD 3-Clause "New" or "Revised" License                   #
 #############################################################
+
+import pytest
 
 import FSDAMGromacs.mdp_files as mdp_files
 
@@ -83,21 +86,24 @@ class TestMdpFile():
         temperature = 297.20
         lambda_steps = None
         COM_pull_goups = ['DU1', 'Protein', 'DU2']
+        harmonic_kappa = [['DU1', 'Protein', 120], ['DU1', 'DU2', 121],
+                          ['Protein', 'DU2', 0]]
 
         instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
                                      timestep_ps, number_of_steps, temperature,
-                                     lambda_steps, COM_pull_goups)
+                                     lambda_steps, COM_pull_goups,
+                                     harmonic_kappa)
 
         expected_output = [
             ';COM PULLING', 'pull                     = yes',
-            'pull-print-com           = yes', 'pull-ncoords            = 2',
+            'pull-print-com           = yes',
+            f'pull-ncoords            = {len(COM_pull_goups)}',
             'pull-nstxout            = 10',
             f'pull-ngroups            = {len(COM_pull_goups)}',
             f'pull-group1-name        = {COM_pull_goups[0]}\n' +
             f'pull-group2-name        = {COM_pull_goups[1]}\n' +
             f'pull-group3-name        = {COM_pull_goups[2]}\n',
             'pull-pbc-ref-prev-step-com  = yes',
-            'pull-group1-pbcatom     = 2373',
             'pull-coord1-geometry    = distance',
             'pull-coord1-type        = umbrella',
             'pull-coord1-dim         = Y Y Y', 'pull-coord1-groups      = 1 2',
@@ -107,10 +113,40 @@ class TestMdpFile():
             'pull-coord2-type        = umbrella',
             'pull-coord2-dim         = Y Y Y', 'pull-coord2-groups      = 1 3',
             'pull-coord2-start       = yes', 'pull-coord2-init       = 0.0',
-            'pull-coord2-rate       = 0', 'pull-coord2-k          = 120'
+            'pull-coord2-rate       = 0', 'pull-coord2-k          = 121',
+            'pull-coord3-geometry    = distance',
+            'pull-coord3-type        = umbrella',
+            'pull-coord3-dim         = Y Y Y', 'pull-coord3-groups      = 2 3',
+            'pull-coord3-start       = yes', 'pull-coord3-init       = 0.0',
+            'pull-coord3-rate       = 0', 'pull-coord3-k          = 0'
         ]
 
         assert instance._create_COMCOM_pulling_strings() == expected_output
+
+    @pytest.mark.parametrize('test_type, harmonic_kappa',
+                             [('harmonic_kappa None', None),
+                              ('harmonic_kappa []', [])])
+    def test__create_COMCOM_pulling_strings_raises_valueerror(
+            self, test_type, harmonic_kappa):
+
+        print('Logging test type for visibility: ' + test_type)
+
+        mdp_file = 'mdp'
+        alchemical_molecule = 'alch'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = ['DU1', 'Protein', 'DU2']
+
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups,
+                                     harmonic_kappa)
+
+        with pytest.raises(ValueError):
+
+            instance._create_COMCOM_pulling_strings()
 
     def test_get_template(self):
 

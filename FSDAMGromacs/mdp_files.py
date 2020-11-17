@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=duplicate-code
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
@@ -57,6 +58,11 @@ class MdpFile(object):
         that will have an harmonic COM-COM (center of mass) constrain
         Usually for unbound state no pulling is needed (default)
         for bound state it is ["Protein", "<ligand residue name>", "<dummy heavy atom>"]
+    harmonic_kappa : list
+        [ ["group_1", "group_2", harmonic_kappa_value], ... ] (str, str, int)
+        it is a nested list containing the couple-couple harmonic kappa value
+        for the umbrella COM-COM pulling, a good numbe may be 120
+        if you don't want to groups to pull each other set kappa to 0
 
 
     Methods
@@ -79,7 +85,8 @@ class MdpFile(object):
                  number_of_steps=1000000,
                  temperature=298.15,
                  lambda_steps=None,
-                 COM_pull_goups=None):
+                 COM_pull_goups=None,
+                 harmonic_kappa=None):
 
         if mdp_file[-4:] != '.mdp':
             mdp_file += '.mdp'
@@ -97,6 +104,8 @@ class MdpFile(object):
         self.lambda_steps = lambda_steps
 
         self.COM_pull_goups = COM_pull_goups
+
+        self.harmonic_kappa = harmonic_kappa
 
         self._template = []
 
@@ -118,30 +127,52 @@ class MdpFile(object):
         elif len(self.COM_pull_goups) == 0:
             return ''
 
+        # pylint: disable=no-else-raise
+        if self.harmonic_kappa is None:
+            raise ValueError(
+                'If you give some COM pull groups you shall give some harmonic constants'
+            )
+        elif len(self.harmonic_kappa) == 0:
+            raise ValueError(
+                'If you give some COM pull groups you shall give some harmonic constants'
+            )
+
         pull_ngroups = len(self.COM_pull_goups)
 
+        pull_groups_name_number = {}
         pull_group_name = ''
         for i, group in enumerate(self.COM_pull_goups):
             pull_group_name += f'pull-group{i + 1}-name        = {group}\n'
 
+            pull_groups_name_number[group] = i + 1
+
+        pull_coord = []
+        for i, couple in enumerate(self.harmonic_kappa):
+
+            pull_coord += [
+                f'pull-coord{i + 1}-geometry    = distance',
+                f'pull-coord{i + 1}-type        = umbrella',
+                f'pull-coord{i + 1}-dim         = Y Y Y',
+
+                f'pull-coord{i + 1}-groups      = ' + \
+                f'{pull_groups_name_number[couple[0]]} {pull_groups_name_number[couple[1]]}',
+
+                f'pull-coord{i + 1}-start       = yes',
+                f'pull-coord{i + 1}-init       = 0.0',
+                f'pull-coord{i + 1}-rate       = 0',
+                f'pull-coord{i + 1}-k          = {couple[2]}'
+            ]
+
         COM_pulling_strings = [
             ';COM PULLING', 'pull                     = yes',
-            'pull-print-com           = yes', 'pull-ncoords            = 2',
+            'pull-print-com           = yes',
+            f'pull-ncoords            = {pull_ngroups}',
             'pull-nstxout            = 10',
             f'pull-ngroups            = {pull_ngroups}', f'{pull_group_name}',
-            'pull-pbc-ref-prev-step-com  = yes',
-            'pull-group1-pbcatom     = 2373',
-            'pull-coord1-geometry    = distance',
-            'pull-coord1-type        = umbrella',
-            'pull-coord1-dim         = Y Y Y', 'pull-coord1-groups      = 1 2',
-            'pull-coord1-start       = yes', 'pull-coord1-init       = 0.0',
-            'pull-coord1-rate       = 0', 'pull-coord1-k          = 120',
-            'pull-coord2-geometry    = distance',
-            'pull-coord2-type        = umbrella',
-            'pull-coord2-dim         = Y Y Y', 'pull-coord2-groups      = 1 3',
-            'pull-coord2-start       = yes', 'pull-coord2-init       = 0.0',
-            'pull-coord2-rate       = 0', 'pull-coord2-k          = 120'
+            'pull-pbc-ref-prev-step-com  = yes'
         ]
+
+        COM_pulling_strings += pull_coord
 
         return COM_pulling_strings
 
