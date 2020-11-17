@@ -188,7 +188,10 @@ class MdpFile(object):
 
         for i in range(len(self._template)):
 
-            if self._template[i][-1] != '\n':
+            if self._template[i] == '':
+                self._template[i] += '\n'
+
+            elif self._template[i][-1] != '\n':
 
                 self._template[i] += '\n'
 
