@@ -59,7 +59,7 @@ class MdpFile(object):
         Usually for unbound state no pulling is needed (default)
         for bound state it is ["Protein", "<ligand residue name>", "<dummy heavy atom>"]
     harmonic_kappa : list
-        [ ["group_1", "group_2", harmonic_kappa_value], ... ] (str, str, int)
+        [ ["group_1", "group_2", harmonic_kappa_value], ... ] (str, str, float)
         it is a nested list containing the couple-couple harmonic kappa value
         for the umbrella COM-COM pulling, a good numbe may be 120
         if you don't want to groups to pull each other set kappa to 0
@@ -77,6 +77,23 @@ class MdpFile(object):
     (no LJ nor Q but infinite mass) because
     COM COM pulling in gromacs crashes because of poor PBC implemetation if the protein
     crosses the box
+
+    TIPS for input values:
+    This are some good values if you are creating/annihilating a small
+    organic molecule
+
+    * vdw creation:
+        * `timestep_ps` = 0.001
+        * `number_of_steps` = 160000
+    * q creation:
+        * `timestep_ps` = 0.001
+        * `number_of_steps` = 160000
+    * vdw annihilation:
+        * `timestep_ps` = 0.0015
+        * `number_of_steps` = 1000000
+    * q annihilation:
+        * `timestep_ps` = 0.0015
+        * `number_of_steps` = 500000
     """
     def __init__(self,
                  mdp_file,
@@ -149,23 +166,26 @@ class MdpFile(object):
         pull_coord = []
         for i, couple in enumerate(self.harmonic_kappa):
 
-            pull_coord += [
-                f'pull-coord{i + 1}-geometry    = distance',
-                f'pull-coord{i + 1}-type        = umbrella',
-                f'pull-coord{i + 1}-dim         = Y Y Y',
+            #don't write a pull for things with zero harmonic constant
+            if couple[2] not in (0, 0., '0', '0.'):
 
-                f'pull-coord{i + 1}-groups      = ' + \
-                f'{pull_groups_name_number[couple[0]]} {pull_groups_name_number[couple[1]]}',
+                pull_coord += [
+                    f'pull-coord{i + 1}-geometry    = distance',
+                    f'pull-coord{i + 1}-type        = umbrella',
+                    f'pull-coord{i + 1}-dim         = Y Y Y',
 
-                f'pull-coord{i + 1}-start       = yes',
-                f'pull-coord{i + 1}-init       = 0.0',
-                f'pull-coord{i + 1}-rate       = 0',
-                f'pull-coord{i + 1}-k          = {couple[2]}'
-            ]
+                    f'pull-coord{i + 1}-groups      = ' + \
+                    f'{pull_groups_name_number[couple[0]]} {pull_groups_name_number[couple[1]]}',
+
+                    f'pull-coord{i + 1}-start       = yes',
+                    f'pull-coord{i + 1}-init       = 0.0',
+                    f'pull-coord{i + 1}-rate       = 0',
+                    f'pull-coord{i + 1}-k          = {couple[2]}'
+                ]
 
         COM_pulling_strings = [
             ';COM PULLING', 'pull                     = yes',
-            'pull-print-com           = yes',
+            'pull-print-com           = yes', 'pull-print-components    = no',
             f'pull-ncoords            = {pull_ngroups}',
             'pull-nstxout            = 10',
             f'pull-ngroups            = {pull_ngroups}', f'{pull_group_name}',
@@ -353,7 +373,8 @@ class AnnihilateVdwMdpBoundState(MdpFile):
             'couple-lambda0           =none', 'couple-lambda1           =vdw',
             'couple-intramol          =no', 'sc-alpha                 = 0.0',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', ''
+            'sc-power                 = 1', 'nstdhdl                  = 100',
+            'separate-dhdl-file       = yes', ''
         ]
 
         self._template += self._create_COMCOM_pulling_strings()
@@ -502,7 +523,8 @@ class AnnihilateQMdpBoundState(MdpFile):
             'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
             'couple-intramol          =no', 'sc-alpha                 = 0.0',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', ''
+            'sc-power                 = 1', 'nstdhdl                  = 100',
+            'separate-dhdl-file       = yes', ''
         ]
 
         self._template += self._create_COMCOM_pulling_strings()
@@ -649,7 +671,8 @@ class CreateVdwMdpUnboundState(MdpFile):
             'couple-lambda0           =none', 'couple-lambda1           =vdw',
             'couple-intramol          =no', 'sc-alpha                 = 0.5',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', ''
+            'sc-power                 = 1', 'nstdhdl                  = 100',
+            'separate-dhdl-file       = yes', ''
         ]
 
         self._template += self._create_COMCOM_pulling_strings()
@@ -797,7 +820,8 @@ class CreateQMdpUnboundState(MdpFile):
             'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
             'couple-intramol          =no', 'sc-alpha                 = 0.5',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', ''
+            'sc-power                 = 1', 'nstdhdl                  = 100',
+            'separate-dhdl-file       = yes', ''
         ]
 
         self._template += self._create_COMCOM_pulling_strings()

@@ -31,7 +31,7 @@ class Testcreate_dummy_atom_itp():
 
         atomtypes = [
             '; N.B: SIGMA is in nm and EPSILON in kj mol-1', '[ atomtypes ]',
-            ';NAME   AT.NUM  MASS     CHARGE  PTYPE  SIGMA   EPSILON'
+            ';NAME   AT.NUM  MASS     CHARGE  PTYPE  SIGMA   EPSILON',
             f'{name[0:2]}         {atom_number}    {mass}    {charge}   A     {sigma}   {epsilon}',
             ''
         ]

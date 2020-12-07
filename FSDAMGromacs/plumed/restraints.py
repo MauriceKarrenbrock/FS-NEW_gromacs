@@ -16,12 +16,14 @@ def COM_COM_restraint(atom_groups,
                       restraint_parameters,
                       plumed_file='plumed.dat',
                       distances_file='distances.out',
-                      stride=1,
+                      stride=100,
                       geometric=False):
     """create a center of mass (COM) - center of mass restraint with plumed
 
     creates a plumed input file https://www.plumed.org in order to create
     a restraint between 2 centers of mass
+
+    all distances (input and output) will be in nanometers nm!
 
     Parameters
     ------------
@@ -32,7 +34,7 @@ def COM_COM_restraint(atom_groups,
         there can be as many groups as
         you like
     restraint_parameters : list
-        a nested list: [ ["grop_name_1", "grop_name_2", equilibium_distance,
+        a nested list: [ ["grop_name_1", "grop_name_2", equilibium_distance_nm,
         harmonic_kappa, linear_slope], ... ]
         the names must be str the other parameters float, remember that you
         can always set a certain parameter to zero 0.
@@ -44,7 +46,7 @@ def COM_COM_restraint(atom_groups,
         written out (default 'distances.out')
     stride : int
         `distances_file` will be updated each `stride` MD steps
-        (default 1)
+        (default 100)
     geometric : bool, optional
         if True instead of the center of mass the geometrical center
         will be calulated (default False). Can come in handy with strange
@@ -78,6 +80,10 @@ def COM_COM_restraint(atom_groups,
             f'need at least 2 atom groups, not {len(atom_groups)}')
 
     output = []
+
+    #put the units explicitly in order to be always sure what you
+    #get in output and what you are expected to put in input
+    output.append('UNITS LENGTH=nm TIME=ps \n\n')
 
     if geometric:
         com = 'CENTER'

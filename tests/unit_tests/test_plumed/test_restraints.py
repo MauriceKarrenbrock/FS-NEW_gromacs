@@ -47,6 +47,7 @@ class TestCOM_COM_restraint():
         stride = 10
 
         expected = [
+            'UNITS LENGTH=nm TIME=ps \n\n',
             'WHOLEMOLECULES ENTITY0=1,2,3,4 ENTITY1=5,6,7,8 ENTITY2=9,10,11,12 \n',
             f'group_1: {com} ATOMS=1,2,3,4\n',
             f'group_2: {com} ATOMS=5,6,7,8\n',

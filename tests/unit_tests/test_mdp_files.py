@@ -4,6 +4,7 @@
 # pylint: disable=no-self-use
 # pylint: disable=protected-access
 # pylint: disable=duplicate-code
+# pylint: disable=too-many-lines
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
@@ -96,7 +97,7 @@ class TestMdpFile():
 
         expected_output = [
             ';COM PULLING', 'pull                     = yes',
-            'pull-print-com           = yes',
+            'pull-print-com           = yes', 'pull-print-components    = no',
             f'pull-ncoords            = {len(COM_pull_goups)}',
             'pull-nstxout            = 10',
             f'pull-ngroups            = {len(COM_pull_goups)}',
@@ -113,12 +114,7 @@ class TestMdpFile():
             'pull-coord2-type        = umbrella',
             'pull-coord2-dim         = Y Y Y', 'pull-coord2-groups      = 1 3',
             'pull-coord2-start       = yes', 'pull-coord2-init       = 0.0',
-            'pull-coord2-rate       = 0', 'pull-coord2-k          = 121',
-            'pull-coord3-geometry    = distance',
-            'pull-coord3-type        = umbrella',
-            'pull-coord3-dim         = Y Y Y', 'pull-coord3-groups      = 2 3',
-            'pull-coord3-start       = yes', 'pull-coord3-init       = 0.0',
-            'pull-coord3-rate       = 0', 'pull-coord3-k          = 0'
+            'pull-coord2-rate       = 0', 'pull-coord2-k          = 121'
         ]
 
         assert instance._create_COMCOM_pulling_strings() == expected_output
@@ -358,7 +354,8 @@ class TestAnnihilateVdwMdpBoundState():
             'couple-lambda0           =none', 'couple-lambda1           =vdw',
             'couple-intramol          =no', 'sc-alpha                 = 0.0',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', '', 'COM'
+            'sc-power                 = 1', 'nstdhdl                  = 100',
+            'separate-dhdl-file       = yes', '', 'COM'
         ]
 
         assert instance._template == expected_mdp
@@ -554,7 +551,8 @@ class TestAnnihilateQMdpBoundState():
             'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
             'couple-intramol          =no', 'sc-alpha                 = 0.0',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', '', 'COM'
+            'sc-power                 = 1', 'nstdhdl                  = 100',
+            'separate-dhdl-file       = yes', '', 'COM'
         ]
 
         assert instance._template == expected_mdp
@@ -749,7 +747,8 @@ class TestCreateVdwMdpUnboundState():
             'couple-lambda0           =none', 'couple-lambda1           =vdw',
             'couple-intramol          =no', 'sc-alpha                 = 0.5',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', '', 'COM'
+            'sc-power                 = 1', 'nstdhdl                  = 100',
+            'separate-dhdl-file       = yes', '', 'COM'
         ]
 
         assert instance._template == expected_mdp
@@ -944,7 +943,8 @@ class TestCreateQMdpUnboundState():
             'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
             'couple-intramol          =no', 'sc-alpha                 = 0.5',
             'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', '', 'COM'
+            'sc-power                 = 1', 'nstdhdl                  = 100',
+            'separate-dhdl-file       = yes', '', 'COM'
         ]
 
         assert instance._template == expected_mdp

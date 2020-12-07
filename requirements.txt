@@ -1,1 +1,3 @@
 git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git #PythonAuxiliaryFunctions
+git+https://github.com/MauriceKarrenbrock/PythonFSDAM.git #PythonFSDAM
+numpy
