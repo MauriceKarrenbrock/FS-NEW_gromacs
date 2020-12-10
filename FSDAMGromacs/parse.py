@@ -8,8 +8,9 @@
 """functions and classes to parse gromacs output files
 """
 
-import numpy as np
+import re
 
+import numpy as np
 import PythonFSDAM.parse.parse_superclasses as superclasses
 
 
@@ -63,3 +64,98 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
             parsed_file[0, iterator.index] = delta_lambda * iterator.index
 
         return parsed_file
+
+
+class GromacsParsePullDistances(superclasses.Parser):
+    """Parses the <something>_pullx.xvg file for COM-COM pulls
+    """
+    def parse(self, file_name):
+        """Parses the <something>_pullx.xvg file for COM-COM pulls
+
+        Parameters
+        ------------
+        file_name : pathlib.Path
+            the path to the pullx.xvg file
+            it takes for granted that the positions are in nanometers and
+            converts them in angstrom (multiplies * 10), if they are in a different unit it's
+            your job to deal with the unit change
+
+        Return
+        ---------
+        dict of numpy.array
+            this dictionary has the number of the pull group (int) as key
+            and the COM position in ANGSTROMS!! as values (numpy.array)
+
+        Notes
+        -------------
+        the returned dict will point to a bigger matrix so remember to eliminate it
+        when you don't need it anymore to free memory
+        """
+
+        #This is an example of the file header:
+        # s0 is actulally the second column because the first one is time (xaxis)
+
+        # # gmx mdrun is part of G R O M A C S:
+        # #
+        # # GROningen Mixture of Alchemy and Childrens' Stories
+        # #
+        # @    title "Pull COM"
+        # @    xaxis  label "Time (ps)"
+        # @    yaxis  label "Position (nm)"
+        # @TYPE xy
+        # @ view 0.15, 0.15, 0.75, 0.85
+        # @ legend on
+        # @ legend box on
+        # @ legend loctype view
+        # @ legend 0.78, 0.8
+        # @ legend length 2
+        # @ s0 legend "1"
+        # @ s1 legend "1 g 1 X"
+        # @ s2 legend "1 g 1 Y"
+        # @ s3 legend "1 g 1 Z"
+        # @ s4 legend "1 g 2 X"
+        # @ s5 legend "1 g 2 Y"
+        # @ s6 legend "1 g 2 Z"
+        # @ s7 legend "2"
+        # @ s8 legend "2 g 1 X"
+        # @ s9 legend "2 g 1 Y"
+        # @ s10 legend "2 g 1 Z"
+        # @ s11 legend "2 g 2 X"
+        # @ s12 legend "2 g 2 Y"
+        # @ s13 legend "2 g 2 Z"
+
+        parsed_file = np.loadtxt(file_name, comments=['#', '@'], delimiter=' ')
+
+        #from nm to angstrom
+        parsed_file = parsed_file * 10.
+
+        #check which columns are useful and should be  returned
+        output_dict = {}
+
+        column = 0
+
+        with open(file_name, 'r') as f:
+
+            for line in f:
+
+                line = line.strip()
+
+                if line[0] not in ('#', '@'):
+
+                    break
+
+                if line[0] == '@':
+
+                    if line.split()[1][0] == 's':
+
+                        column += 1
+
+                        #contains only a number
+                        if bool(
+                                re.match('^[0-9]*$',
+                                         line.split()[-1].strip('"'))):
+
+                            output_dict[int(line.split()[-1].strip(
+                                '"'))] = parsed_file[column]
+
+        return output_dict
