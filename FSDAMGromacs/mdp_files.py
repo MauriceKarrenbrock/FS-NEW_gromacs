@@ -63,6 +63,12 @@ class MdpFile(object):
         it is a nested list containing the couple-couple harmonic kappa value
         for the umbrella COM-COM pulling, a good numbe may be 120
         if you don't want to groups to pull each other set kappa to 0
+    pbc_atoms : iterable of int, optional
+        an iterable containing the number of each nearest atom to the
+        geometric center of the `COM_pull_goups` molecule
+        must be as long as `COM_pull_goups`, for small molecules
+        you can set it to zero (gromacs will guess it) for big ones (proteins)
+        it must be given, if you keep it None it will gess it on any molecule
 
 
     Methods
@@ -103,7 +109,8 @@ class MdpFile(object):
                  temperature=298.15,
                  lambda_steps=None,
                  COM_pull_goups=None,
-                 harmonic_kappa=None):
+                 harmonic_kappa=None,
+                 pbc_atoms=None):
 
         if mdp_file[-4:] != '.mdp':
             mdp_file += '.mdp'
@@ -123,6 +130,8 @@ class MdpFile(object):
         self.COM_pull_goups = COM_pull_goups
 
         self.harmonic_kappa = harmonic_kappa
+
+        self.pbc_atoms = pbc_atoms
 
         self._template = []
 
@@ -184,6 +193,12 @@ class MdpFile(object):
                     f'pull-coord{i + 1}-rate       = 0',
                     f'pull-coord{i + 1}-k          = {couple[2]}'
                 ]
+
+                if self.pbc_atoms is not None:
+
+                    pull_coord += [
+                        f'pull-group{i + 1}-pbcatom     = {self.pbc_atoms[i]}'
+                    ]
 
             else:
 
