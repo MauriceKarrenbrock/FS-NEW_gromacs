@@ -28,7 +28,8 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
 
     This class will convert the time column in lambda column
     """
-    def parse(self, file_name, abs_lambda_max_val=1.0):  # pylint: disable=arguments-differ
+    @staticmethod
+    def parse(file_name, abs_lambda_max_val=1.0):  # pylint: disable=arguments-differ
         """Parses a dhdl.xvg file
 
         Parameters
@@ -56,12 +57,9 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         #parsed file is time vs dhdl but I want lambda vs dhdl
         delta_lambda = abs_lambda_max_val / float(parsed_file.shape[1] - 1)
 
-        #only time line
-        iterator = np.nditer(parsed_file[0], flags=['c_index'])
+        tmp = np.arange(len(parsed_file[:, 0]))
 
-        for i in iterator:  # pylint: disable=unused-variable
-
-            parsed_file[0, iterator.index] = delta_lambda * iterator.index
+        parsed_file[:, 0] = tmp * delta_lambda
 
         return parsed_file
 
@@ -69,7 +67,8 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
 class GromacsParsePullDistances(superclasses.Parser):
     """Parses the <something>_pullx.xvg file for COM-COM pulls
     """
-    def parse(self, file_name):
+    @staticmethod
+    def parse(file_name):
         """Parses the <something>_pullx.xvg file for COM-COM pulls
 
         Parameters
@@ -156,6 +155,6 @@ class GromacsParsePullDistances(superclasses.Parser):
                                          line.split()[-1].strip('"'))):
 
                             output_dict[int(line.split()[-1].strip(
-                                '"'))] = parsed_file[column]
+                                '"'))] = parsed_file[:, column]
 
         return output_dict
