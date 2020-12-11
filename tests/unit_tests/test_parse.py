@@ -18,7 +18,7 @@ import FSDAMGromacs.parse as parse
 class TestGromacsParseWorkProfile():
     def test_works_parse(self, mocker):
 
-        parsed_stuff = [[0., 1., 2., 3.], [-1., -2., -3., -4.]]
+        parsed_stuff = [[0., -1], [1., -2.], [2., -3.], [3., -4.]]
 
         expected_output = [[0., 1. / 3., 2. * 1. / 3., 3 * 1. / 3.],
                            [-1., -2., -3., -4.]]

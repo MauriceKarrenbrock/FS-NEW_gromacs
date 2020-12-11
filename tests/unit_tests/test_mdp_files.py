@@ -98,7 +98,7 @@ class TestMdpFile():
         expected_output = [
             ';COM PULLING', 'pull                     = yes',
             'pull-print-com           = yes', 'pull-print-components    = no',
-            f'pull-ncoords            = {len(COM_pull_goups)}',
+            f'pull-ncoords            = {len(COM_pull_goups)-1}',
             'pull-nstxout            = 10',
             f'pull-ngroups            = {len(COM_pull_goups)}',
             f'pull-group1-name        = {COM_pull_goups[0]}\n' +

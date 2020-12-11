@@ -156,6 +156,8 @@ class MdpFile(object):
 
         pull_ngroups = len(self.COM_pull_goups)
 
+        pull_ncoords = pull_ngroups
+
         pull_groups_name_number = {}
         pull_group_name = ''
         for i, group in enumerate(self.COM_pull_goups):
@@ -183,10 +185,14 @@ class MdpFile(object):
                     f'pull-coord{i + 1}-k          = {couple[2]}'
                 ]
 
+            else:
+
+                pull_ncoords -= 1
+
         COM_pulling_strings = [
             ';COM PULLING', 'pull                     = yes',
             'pull-print-com           = yes', 'pull-print-components    = no',
-            f'pull-ncoords            = {pull_ngroups}',
+            f'pull-ncoords            = {pull_ncoords}',
             'pull-nstxout            = 10',
             f'pull-ngroups            = {pull_ngroups}', f'{pull_group_name}',
             'pull-pbc-ref-prev-step-com  = yes'

@@ -43,6 +43,10 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         Returns
         ---------
         a 2-D array containing lambda and dh/dl
+        [
+            [lambda1, lambda2, ...],
+            [dh/dl, dh/dl, ...]
+        ]
 
         Notes
         ---------
@@ -55,13 +59,13 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         parsed_file = np.loadtxt(file_name, comments=['#', '@'], delimiter=' ')
 
         #parsed file is time vs dhdl but I want lambda vs dhdl
-        delta_lambda = abs_lambda_max_val / float(parsed_file.shape[1] - 1)
+        delta_lambda = abs_lambda_max_val / float(parsed_file.shape[0] - 1)
 
         tmp = np.arange(len(parsed_file[:, 0]))
 
         parsed_file[:, 0] = tmp * delta_lambda
 
-        return parsed_file
+        return parsed_file.transpose()
 
 
 class GromacsParsePullDistances(superclasses.Parser):
