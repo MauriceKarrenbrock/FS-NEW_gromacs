@@ -30,10 +30,11 @@ class Testcreate_dummy_atom_itp():
         charge_group = 1
 
         atomtypes = [
-            '; N.B: SIGMA is in nm and EPSILON in kj mol-1', '[ atomtypes ]',
-            ';NAME   AT.NUM  MASS     CHARGE  PTYPE  SIGMA   EPSILON',
-            f'{name[0:2]}         {atom_number}    {mass}    {charge}   A     {sigma}   {epsilon}',
-            ''
+            '; N.B: SIGMA is in nm and EPSILON in kj mol-1\n',
+            '[ atomtypes ]\n',
+            ';NAME   AT.NUM  MASS     CHARGE  PTYPE  SIGMA   EPSILON\n',
+            f'{name[0:2]}         {atom_number}    {mass}    {charge}   A     {sigma}   {epsilon}\n',  # pylint: disable=line-too-long
+            '\n'
         ]
 
         moleculetype = [
@@ -51,7 +52,7 @@ class Testcreate_dummy_atom_itp():
             ''
         ]
 
-        itp_file = atomtypes + moleculetype + atoms
+        itp_file = moleculetype + atoms
 
         for i in range(len(itp_file)):
 
@@ -61,4 +62,5 @@ class Testcreate_dummy_atom_itp():
                                                  name, charge_group,
                                                  atom_number)
 
-        assert output == itp_file
+        assert output[0] == atomtypes
+        assert output[1] == itp_file

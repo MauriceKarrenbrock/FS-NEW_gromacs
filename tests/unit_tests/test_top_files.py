@@ -13,7 +13,7 @@
 import FSDAMGromacs.top_files as top_files
 
 
-class Testadd_include():
+class Testadd_include_after_FF():
     def test_works(self, mocker):
 
         top_file = ['\n', ';\n', 'AAAAAA\n', '#include "stuff"\n', 'AAAAAA\n']
@@ -30,7 +30,36 @@ class Testadd_include():
         m_write = mocker.patch(
             'PythonAuxiliaryFunctions.files_IO.write_file.write_file')
 
-        top_files.add_include('new_included_stuff', 'input', 'output')
+        top_files.add_include_after_FF('new_included_stuff', 'input', 'output')
+
+        m_read.assert_called_once_with('input')
+
+        m_write.assert_called_once_with(expected, 'output')
+
+
+class Testadd_include_after_atomtypes():
+    def test_works(self, mocker):
+
+        top_file = [
+            '\n', ';\n', 'AAAAAA\n', '#include "stuff"\n', 'AAAAAA\n',
+            '[ atomtypes ]\n', 'AAAAA\n', '[ moleculetypes ]\n', 'AAAAA\n'
+        ]
+
+        expected = [
+            '\n', ';\n', 'AAAAAA\n', '#include "stuff"\n', 'AAAAAA\n',
+            '[ atomtypes ]\n', 'AAAAA\n',
+            '\n#include "new_included_stuff"\n[ moleculetypes ]\n', 'AAAAA\n'
+        ]
+
+        m_read = mocker.patch(
+            'PythonAuxiliaryFunctions.files_IO.read_file.read_file',
+            return_value=top_file)
+
+        m_write = mocker.patch(
+            'PythonAuxiliaryFunctions.files_IO.write_file.write_file')
+
+        top_files.add_include_after_atomtypes('new_included_stuff', 'input',
+                                              'output')
 
         m_read.assert_called_once_with('input')
 

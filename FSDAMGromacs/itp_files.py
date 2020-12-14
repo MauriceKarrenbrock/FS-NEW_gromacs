@@ -41,7 +41,11 @@ def create_dummy_atom_itp(mass,
 
     Returns
     -----------
-    list of strings
+    atomtypes : list of strings
+        the [ atomtypes ] part of the itp file
+        all the lines already have the newline simbol at the end
+    itp_file : list of strings
+        the rest of the itp file
         all the lines already have the newline simbol at the end
     """
 
@@ -65,10 +69,14 @@ def create_dummy_atom_itp(mass,
         ''
     ]
 
-    itp_file = atomtypes + moleculetype + atoms
+    itp_file = moleculetype + atoms
+
+    for i in range(len(atomtypes)):
+
+        atomtypes[i] += '\n'
 
     for i in range(len(itp_file)):
 
         itp_file[i] += '\n'
 
-    return itp_file
+    return atomtypes, itp_file
