@@ -32,6 +32,8 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
     def parse(file_name, abs_lambda_max_val=1.0):  # pylint: disable=arguments-differ
         """Parses a dhdl.xvg file
 
+        converts the work from KJ/mol to Kcal/mol (1 Kcal = 1/4.148 KJ)
+
         Parameters
         -----------
         file_name : str
@@ -42,7 +44,7 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
 
         Returns
         ---------
-        a 2-D array containing lambda and dh/dl
+        a 2-D array containing lambda and dh/dl (converted in Kcal/mol)
         [
             [lambda1, lambda2, ...],
             [dh/dl, dh/dl, ...]
@@ -59,12 +61,17 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         parsed_file = np.loadtxt(file_name, comments=['#', '@'], delimiter=' ')
 
         #parsed file is time vs dhdl but I want lambda vs dhdl
-        delta_lambda = abs_lambda_max_val / float(parsed_file.shape[0] - 1)
+        delta_lambda = abs_lambda_max_val / float(len(parsed_file[:, 0]) - 1)
 
         tmp = np.arange(len(parsed_file[:, 0]))
 
         parsed_file[:, 0] = tmp * delta_lambda
 
+        #from KJ/mol to Kcal/mol
+        parsed_file[:, 1] = parsed_file[:, 1] * (1. / 4.148)
+
+        #in this way I have a line with all lambdas and a line with all
+        #dhdl
         return parsed_file.transpose()
 
 

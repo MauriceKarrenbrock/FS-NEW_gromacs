@@ -27,6 +27,8 @@ class TestGromacsParseWorkProfile():
 
         expected_output = np.array(expected_output)
 
+        expected_output[1, :] = expected_output[1, :] * (1. / 4.148)
+
         mocked_load = mocker.patch('numpy.loadtxt', return_value=parsed_stuff)
 
         instance = parse.GromacsParseWorkProfile('gromacs')
