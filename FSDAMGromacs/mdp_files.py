@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=duplicate-code
+# pylint: disable=too-many-lines
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
@@ -100,6 +101,89 @@ def make_free_energy_lines(condition_lambda0,
     ]
 
     return lines
+
+
+def create_COMCOM_pulling_strings(COM_pull_goups,
+                                  harmonic_kappa,
+                                  pbc_atoms=None):
+    """The strings for COM-COM pulling, in mdp file
+
+    Parameters
+    ------------
+    COM_pull_goups : list of strings
+        the list of gromacs groups (System,Protein,<ligand_resname>,...)
+        that will have an harmonic COM-COM (center of mass) constrain
+        Usually for unbound state no pulling is needed (default)
+        for bound state it is ["Protein", "<ligand residue name>", "<dummy heavy atom>"]
+    harmonic_kappa : list
+        [ ["group_1", "group_2", harmonic_kappa_value], ... ] (str, str, float)
+        it is a nested list containing the couple-couple harmonic kappa value
+        for the umbrella COM-COM pulling, a good numbe may be 120
+        if you don't want to groups to pull each other set kappa to 0
+    pbc_atoms : iterable of int, optional
+        an iterable containing the number of each nearest atom to the
+        geometric center of the `COM_pull_goups` molecule
+        must be as long as `COM_pull_goups`, for small molecules
+        you can set it to zero (gromacs will guess it) for big ones (proteins)
+        it must be given, if you keep it None it will gess it on any molecule
+
+    Returns
+    ----------
+    list of strings
+        missing newlines
+    """
+
+    pull_ngroups = len(COM_pull_goups)
+
+    pull_ncoords = pull_ngroups
+
+    pull_groups_name_number = {}
+    pull_group_name = ''
+    for i, group in enumerate(COM_pull_goups):
+        pull_group_name += f'pull-group{i + 1}-name        = {group}\n'
+
+        pull_groups_name_number[group] = i + 1
+
+    pull_coord = []
+    for i, couple in enumerate(harmonic_kappa):
+
+        #don't write a pull for things with zero harmonic constant
+        if couple[2] not in (0, 0., '0', '0.'):
+
+            pull_coord += [
+                f'pull-coord{i + 1}-geometry    = distance',
+                f'pull-coord{i + 1}-type        = umbrella',
+                f'pull-coord{i + 1}-dim         = Y Y Y',
+
+                f'pull-coord{i + 1}-groups      = ' + \
+                f'{pull_groups_name_number[couple[0]]} {pull_groups_name_number[couple[1]]}',
+
+                f'pull-coord{i + 1}-start       = yes',
+                f'pull-coord{i + 1}-init       = 0.0',
+                f'pull-coord{i + 1}-rate       = 0',
+                f'pull-coord{i + 1}-k          = {couple[2]}'
+            ]
+
+        else:
+
+            pull_ncoords -= 1
+
+        if pbc_atoms is not None:
+
+            pull_coord += [f'pull-group{i + 1}-pbcatom     = {pbc_atoms[i]}']
+
+    COM_pulling_strings = [
+        ';COM PULLING', 'pull                     = yes',
+        'pull-print-com           = yes', 'pull-print-components    = no',
+        f'pull-ncoords            = {pull_ncoords}',
+        'pull-nstxout            = 10',
+        f'pull-ngroups            = {pull_ngroups}', f'{pull_group_name}',
+        'pull-pbc-ref-prev-step-com  = yes'
+    ]
+
+    COM_pulling_strings += pull_coord
+
+    return COM_pulling_strings
 
 
 class MdpFile(object):
@@ -261,16 +345,13 @@ class MdpFile(object):
     def _create_COMCOM_pulling_strings(self):
         """Private creates the strings for COM-COM pulling
 
-        Returns
-        ----------
-        string
-            will return an empty string if `self.COM_pull_goups` is empty or None
+        wrapper of `create_COMCOM_pulling_strings` function
         """
 
         if self.COM_pull_goups is None:
-            return ''
+            return ['']
         elif len(self.COM_pull_goups) == 0:
-            return ''
+            return ['']
 
         # pylint: disable=no-else-raise
         if self.harmonic_kappa is None:
@@ -282,59 +363,10 @@ class MdpFile(object):
                 'If you give some COM pull groups you shall give some harmonic constants'
             )
 
-        pull_ngroups = len(self.COM_pull_goups)
-
-        pull_ncoords = pull_ngroups
-
-        pull_groups_name_number = {}
-        pull_group_name = ''
-        for i, group in enumerate(self.COM_pull_goups):
-            pull_group_name += f'pull-group{i + 1}-name        = {group}\n'
-
-            pull_groups_name_number[group] = i + 1
-
-        pull_coord = []
-        for i, couple in enumerate(self.harmonic_kappa):
-
-            #don't write a pull for things with zero harmonic constant
-            if couple[2] not in (0, 0., '0', '0.'):
-
-                pull_coord += [
-                    f'pull-coord{i + 1}-geometry    = distance',
-                    f'pull-coord{i + 1}-type        = umbrella',
-                    f'pull-coord{i + 1}-dim         = Y Y Y',
-
-                    f'pull-coord{i + 1}-groups      = ' + \
-                    f'{pull_groups_name_number[couple[0]]} {pull_groups_name_number[couple[1]]}',
-
-                    f'pull-coord{i + 1}-start       = yes',
-                    f'pull-coord{i + 1}-init       = 0.0',
-                    f'pull-coord{i + 1}-rate       = 0',
-                    f'pull-coord{i + 1}-k          = {couple[2]}'
-                ]
-
-                if self.pbc_atoms is not None:
-
-                    pull_coord += [
-                        f'pull-group{i + 1}-pbcatom     = {self.pbc_atoms[i]}'
-                    ]
-
-            else:
-
-                pull_ncoords -= 1
-
-        COM_pulling_strings = [
-            ';COM PULLING', 'pull                     = yes',
-            'pull-print-com           = yes', 'pull-print-components    = no',
-            f'pull-ncoords            = {pull_ncoords}',
-            'pull-nstxout            = 10',
-            f'pull-ngroups            = {pull_ngroups}', f'{pull_group_name}',
-            'pull-pbc-ref-prev-step-com  = yes'
-        ]
-
-        COM_pulling_strings += pull_coord
-
-        return COM_pulling_strings
+        return create_COMCOM_pulling_strings(
+            COM_pull_goups=self.COM_pull_goups,
+            harmonic_kappa=self.harmonic_kappa,
+            pbc_atoms=self.pbc_atoms)
 
     def _get_template(self):
         """PRIVATE the template to write on MDP file

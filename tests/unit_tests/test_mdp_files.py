@@ -48,6 +48,95 @@ class Testmake_free_energy_lines():
         assert output == expected
 
 
+class Testcreate_COMCOM_pulling_strings():
+    def test_works_pbc_none(self):
+
+        COM_pull_goups = ['DU1', 'Protein', 'DU2']
+
+        harmonic_kappa = [['DU1', 'Protein', 120], ['DU1', 'DU2', 121],
+                          ['Protein', 'DU2', 0]]
+
+        pbc = None
+
+        output = mdp_files.create_COMCOM_pulling_strings(
+            COM_pull_goups=COM_pull_goups,
+            harmonic_kappa=harmonic_kappa,
+            pbc_atoms=pbc)
+
+        expected_output = [
+            ';COM PULLING', 'pull                     = yes',
+            'pull-print-com           = yes', 'pull-print-components    = no',
+            f'pull-ncoords            = {len(COM_pull_goups)-1}',
+            'pull-nstxout            = 10',
+            f'pull-ngroups            = {len(COM_pull_goups)}',
+            f'pull-group1-name        = {COM_pull_goups[0]}\n' +
+            f'pull-group2-name        = {COM_pull_goups[1]}\n' +
+            f'pull-group3-name        = {COM_pull_goups[2]}\n',
+            'pull-pbc-ref-prev-step-com  = yes',
+            'pull-coord1-geometry    = distance',
+            'pull-coord1-type        = umbrella',
+            'pull-coord1-dim         = Y Y Y', 'pull-coord1-groups      = 1 2',
+            'pull-coord1-start       = yes', 'pull-coord1-init       = 0.0',
+            'pull-coord1-rate       = 0', 'pull-coord1-k          = 120',
+            'pull-coord2-geometry    = distance',
+            'pull-coord2-type        = umbrella',
+            'pull-coord2-dim         = Y Y Y', 'pull-coord2-groups      = 1 3',
+            'pull-coord2-start       = yes', 'pull-coord2-init       = 0.0',
+            'pull-coord2-rate       = 0', 'pull-coord2-k          = 121'
+        ]
+
+        assert output == expected_output
+
+    def test_works_given_pbc(self):
+
+        COM_pull_goups = ['DU1', 'Protein', 'DU2']
+
+        harmonic_kappa = [['DU1', 'Protein', 120], ['DU1', 'DU2', 121],
+                          ['Protein', 'DU2', 0]]
+
+        pbc = (124, 0, 0)
+
+        output = mdp_files.create_COMCOM_pulling_strings(
+            COM_pull_goups=COM_pull_goups,
+            harmonic_kappa=harmonic_kappa,
+            pbc_atoms=pbc)
+
+        expected_output = [
+            ';COM PULLING',
+            'pull                     = yes',
+            'pull-print-com           = yes',
+            'pull-print-components    = no',
+            f'pull-ncoords            = {len(COM_pull_goups)-1}',
+            'pull-nstxout            = 10',
+            f'pull-ngroups            = {len(COM_pull_goups)}',
+            f'pull-group1-name        = {COM_pull_goups[0]}\n' +
+            f'pull-group2-name        = {COM_pull_goups[1]}\n' +
+            f'pull-group3-name        = {COM_pull_goups[2]}\n',
+            'pull-pbc-ref-prev-step-com  = yes',
+            'pull-coord1-geometry    = distance',
+            'pull-coord1-type        = umbrella',
+            'pull-coord1-dim         = Y Y Y',
+            'pull-coord1-groups      = 1 2',
+            'pull-coord1-start       = yes',
+            'pull-coord1-init       = 0.0',
+            'pull-coord1-rate       = 0',
+            'pull-coord1-k          = 120',
+            'pull-group1-pbcatom     = 124',
+            'pull-coord2-geometry    = distance',
+            'pull-coord2-type        = umbrella',
+            'pull-coord2-dim         = Y Y Y',
+            'pull-coord2-groups      = 1 3',
+            'pull-coord2-start       = yes',
+            'pull-coord2-init       = 0.0',
+            'pull-coord2-rate       = 0',
+            'pull-coord2-k          = 121',
+            'pull-group2-pbcatom     = 0',
+            'pull-group3-pbcatom     = 0',
+        ]
+
+        assert output == expected_output
+
+
 class TestMdpFile():
     def test_init(self):
 
@@ -136,7 +225,7 @@ class TestMdpFile():
                                      timestep_ps, number_of_steps, temperature,
                                      lambda_steps, COM_pull_goups)
 
-        assert instance._create_COMCOM_pulling_strings() == ''
+        assert instance._create_COMCOM_pulling_strings() == ['']
 
     def test__create_COMCOM_pulling_strings_empty_list(self):
 
@@ -152,9 +241,9 @@ class TestMdpFile():
                                      timestep_ps, number_of_steps, temperature,
                                      lambda_steps, COM_pull_goups)
 
-        assert instance._create_COMCOM_pulling_strings() == ''
+        assert instance._create_COMCOM_pulling_strings() == ['']
 
-    def test__create_COMCOM_pulling_strings_works(self):
+    def test__create_COMCOM_pulling_strings_works(self, mocker):
 
         mdp_file = 'mdp'
         alchemical_molecule = 'alc'
@@ -166,34 +255,20 @@ class TestMdpFile():
         harmonic_kappa = [['DU1', 'Protein', 120], ['DU1', 'DU2', 121],
                           ['Protein', 'DU2', 0]]
 
+        m_COM = mocker.patch(
+            'FSDAMGromacs.mdp_files.create_COMCOM_pulling_strings',
+            return_value=['A', 'B'])
+
         instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
                                      timestep_ps, number_of_steps, temperature,
                                      lambda_steps, COM_pull_goups,
                                      harmonic_kappa)
 
-        expected_output = [
-            ';COM PULLING', 'pull                     = yes',
-            'pull-print-com           = yes', 'pull-print-components    = no',
-            f'pull-ncoords            = {len(COM_pull_goups)-1}',
-            'pull-nstxout            = 10',
-            f'pull-ngroups            = {len(COM_pull_goups)}',
-            f'pull-group1-name        = {COM_pull_goups[0]}\n' +
-            f'pull-group2-name        = {COM_pull_goups[1]}\n' +
-            f'pull-group3-name        = {COM_pull_goups[2]}\n',
-            'pull-pbc-ref-prev-step-com  = yes',
-            'pull-coord1-geometry    = distance',
-            'pull-coord1-type        = umbrella',
-            'pull-coord1-dim         = Y Y Y', 'pull-coord1-groups      = 1 2',
-            'pull-coord1-start       = yes', 'pull-coord1-init       = 0.0',
-            'pull-coord1-rate       = 0', 'pull-coord1-k          = 120',
-            'pull-coord2-geometry    = distance',
-            'pull-coord2-type        = umbrella',
-            'pull-coord2-dim         = Y Y Y', 'pull-coord2-groups      = 1 3',
-            'pull-coord2-start       = yes', 'pull-coord2-init       = 0.0',
-            'pull-coord2-rate       = 0', 'pull-coord2-k          = 121'
-        ]
+        assert instance._create_COMCOM_pulling_strings() == ['A', 'B']
 
-        assert instance._create_COMCOM_pulling_strings() == expected_output
+        m_COM.assert_called_once_with(COM_pull_goups=COM_pull_goups,
+                                      harmonic_kappa=harmonic_kappa,
+                                      pbc_atoms=None)
 
     @pytest.mark.parametrize('test_type, harmonic_kappa',
                              [('harmonic_kappa None', None),
