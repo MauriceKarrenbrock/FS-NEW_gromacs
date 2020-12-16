@@ -15,6 +15,93 @@ and Q (charges)
 import PythonAuxiliaryFunctions.files_IO.write_file as write_file
 
 
+def make_free_energy_lines(condition_lambda0,
+                           condition_lambda1,
+                           alchemical_molecule,
+                           lambda_step,
+                           starting_lambda=0,
+                           couple_intramol='no',
+                           sc_alpha=0.0,
+                           sc_coul='no',
+                           sc_sigma=0.25,
+                           sc_power=1,
+                           nstdhdl=100,
+                           separate_dhdl_file='yes',
+                           free_energy='yes'):
+    """Get the free energy lines of a mdp_file
+
+    Parameters
+    ------------
+    condition_lambda0 : str
+        the condition of the sistem for lambda=0
+        the options are 'vdw-q', 'vdw', 'none'
+    condition_lambda1 : str
+        the condition of the sistem for lambda=1
+        the options are 'vdw-q', 'vdw', 'none'
+    alchemical_molecule : str
+        the residue name of the molecule that will be
+        annihilated/created
+    lambda_step : float
+        how much lambda will increase/decrease each timestep
+        (can be both positive and negative)
+    starting_lambda : int, default=0
+        the starting value of lambda (usually 1 or 0)
+    couple_intramol : str, optional, default='no'
+        check the mdp documentation on the gromacs website
+        don't use this options if you don't know what you are doing
+    sc_alpha : float, optional, default=0.0
+        check the mdp documentation on the gromacs website
+        don't use this options if you don't know what you are doing
+    sc_coul : str, optional, default='no'
+        check the mdp documentation on the gromacs website
+        don't use this options if you don't know what you are doing
+    sc_sigma : float, optional, default=0.25
+        check the mdp documentation on the gromacs website
+        don't use this options if you don't know what you are doing
+    sc_power : int, optional, default=1
+        check the mdp documentation on the gromacs website
+        don't use this options if you don't know what you are doing
+    nstdhdl : int, optional, default=100
+        check the mdp documentation on the gromacs website
+        don't use this options if you don't know what you are doing
+    separate_dhdl_file : str, optional, default='yes'
+        check the mdp documentation on the gromacs website
+        don't use this options if you don't know what you are doing
+    free_energy : str, optional, default='yes'
+        check the mdp documentation on the gromacs website
+        don't use this options if you don't know what you are doing
+
+    Returns
+    ------------
+    list of str
+        the lines of the mdp file (newline missing)
+
+    Notes
+    ----------
+    A good convention but it's not compulsory is that during creation
+    lambda goes from 0 -> 1 and during annihilation 1 -> 0
+    """
+
+    lines = [
+        '; Free energy control stuff',
+        f'free-energy              = {free_energy}',
+        f'init-lambda              = {starting_lambda}',
+        f'delta-lambda             = {lambda_step}',
+        f'couple-moltype           = {alchemical_molecule}',
+        f'couple-lambda0           ={condition_lambda0}',
+        f'couple-lambda1           ={condition_lambda1}',
+        f'couple-intramol          ={couple_intramol}',
+        f'sc-alpha                 = {sc_alpha}',
+        f'sc-coul                  = {sc_coul}',
+        f'sc-sigma                 = {sc_sigma}',
+        f'sc-power                 = {sc_power}',
+        f'nstdhdl                  = {nstdhdl}',
+        f'separate-dhdl-file       = {separate_dhdl_file}', ''
+    ]
+
+    return lines
+
+
 class MdpFile(object):
     """Super class for MDP file creation 4 alchemical transformations
 
@@ -138,6 +225,38 @@ class MdpFile(object):
     def _hook(self):
         """a hook for subclasses
         """
+
+    def _create_free_energy_strings(self,
+                                    condition_lambda0,
+                                    condition_lambda1,
+                                    starting_lambda,
+                                    couple_intramol='no',
+                                    sc_alpha=0.0,
+                                    sc_coul='no',
+                                    sc_sigma=0.25,
+                                    sc_power=1,
+                                    nstdhdl=100,
+                                    separate_dhdl_file='yes',
+                                    free_energy='yes'):
+        """Makes the free energy strings
+
+        wrapper of `make_free_energy_lines` function
+        """
+
+        return make_free_energy_lines(
+            condition_lambda0=condition_lambda0,
+            condition_lambda1=condition_lambda1,
+            alchemical_molecule=self.alchemical_molecule,
+            lambda_step=self.lambda_steps,
+            starting_lambda=starting_lambda,
+            couple_intramol=couple_intramol,
+            sc_alpha=sc_alpha,
+            sc_coul=sc_coul,
+            sc_sigma=sc_sigma,
+            sc_power=sc_power,
+            nstdhdl=nstdhdl,
+            separate_dhdl_file=separate_dhdl_file,
+            free_energy=free_energy)
 
     def _create_COMCOM_pulling_strings(self):
         """Private creates the strings for COM-COM pulling
@@ -387,16 +506,21 @@ class AnnihilateVdwMdpBoundState(MdpFile):
             '; rotates over more degrees than',
             'lincs-warnangle          = 30',
             '; Convert harmonic bonds to morse potentials',
-            'morse                    = no', '', '; Free energy control stuff',
-            'free-energy              = yes', 'init-lambda              = 1',
-            f'delta-lambda             = {self.lambda_steps}',
-            f'couple-moltype           = {self.alchemical_molecule}',
-            'couple-lambda0           =none', 'couple-lambda1           =vdw',
-            'couple-intramol          =no', 'sc-alpha                 = 0.0',
-            'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', 'nstdhdl                  = 100',
-            'separate-dhdl-file       = yes', ''
+            'morse                    = no', ''
         ]
+
+        self._template += self._create_free_energy_strings(
+            condition_lambda0='none',
+            condition_lambda1='vdw',
+            starting_lambda=1,
+            couple_intramol='no',
+            sc_alpha=0.0,
+            sc_coul='no',
+            sc_sigma=0.25,
+            sc_power=1,
+            nstdhdl=100,
+            separate_dhdl_file='yes',
+            free_energy='yes')
 
         self._template += self._create_COMCOM_pulling_strings()
 
@@ -537,16 +661,21 @@ class AnnihilateQMdpBoundState(MdpFile):
             '; rotates over more degrees than',
             'lincs-warnangle          = 30',
             '; Convert harmonic bonds to morse potentials',
-            'morse                    = no', '', '; Free energy control stuff',
-            'free-energy              = yes', 'init-lambda              = 1',
-            f'delta-lambda             = {self.lambda_steps}',
-            f'couple-moltype           = {self.alchemical_molecule}',
-            'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
-            'couple-intramol          =no', 'sc-alpha                 = 0.0',
-            'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', 'nstdhdl                  = 100',
-            'separate-dhdl-file       = yes', ''
+            'morse                    = no', ''
         ]
+
+        self._template += self._create_free_energy_strings(
+            condition_lambda0='vdw',
+            condition_lambda1='vdw-q',
+            starting_lambda=1,
+            couple_intramol='no',
+            sc_alpha=0.0,
+            sc_coul='no',
+            sc_sigma=0.25,
+            sc_power=1,
+            nstdhdl=100,
+            separate_dhdl_file='yes',
+            free_energy='yes')
 
         self._template += self._create_COMCOM_pulling_strings()
 
@@ -685,16 +814,21 @@ class CreateVdwMdpUnboundState(MdpFile):
             '; rotates over more degrees than',
             'lincs-warnangle          = 30',
             '; Convert harmonic bonds to morse potentials',
-            'morse                    = no', '', '; Free energy control stuff',
-            'free-energy              = yes', 'init-lambda              = 0',
-            f'delta-lambda             = {self.lambda_steps}',
-            f'couple-moltype           = {self.alchemical_molecule}',
-            'couple-lambda0           =none', 'couple-lambda1           =vdw',
-            'couple-intramol          =no', 'sc-alpha                 = 0.5',
-            'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', 'nstdhdl                  = 100',
-            'separate-dhdl-file       = yes', ''
+            'morse                    = no', ''
         ]
+
+        self._template += self._create_free_energy_strings(
+            condition_lambda0='none',
+            condition_lambda1='vdw',
+            starting_lambda=0,
+            couple_intramol='no',
+            sc_alpha=0.5,
+            sc_coul='no',
+            sc_sigma=0.25,
+            sc_power=1,
+            nstdhdl=100,
+            separate_dhdl_file='yes',
+            free_energy='yes')
 
         self._template += self._create_COMCOM_pulling_strings()
 
@@ -834,16 +968,21 @@ class CreateQMdpUnboundState(MdpFile):
             '; rotates over more degrees than',
             'lincs-warnangle          = 30',
             '; Convert harmonic bonds to morse potentials',
-            'morse                    = no', '', '; Free energy control stuff',
-            'free-energy              = yes', 'init-lambda              = 0',
-            f'delta-lambda             = {self.lambda_steps}',
-            f'couple-moltype           = {self.alchemical_molecule}',
-            'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
-            'couple-intramol          =no', 'sc-alpha                 = 0.5',
-            'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', 'nstdhdl                  = 100',
-            'separate-dhdl-file       = yes', ''
+            'morse                    = no', ''
         ]
+
+        self._template += self._create_free_energy_strings(
+            condition_lambda0='vdw',
+            condition_lambda1='vdw-q',
+            starting_lambda=0,
+            couple_intramol='no',
+            sc_alpha=0.5,
+            sc_coul='no',
+            sc_sigma=0.25,
+            sc_power=1,
+            nstdhdl=100,
+            separate_dhdl_file='yes',
+            free_energy='yes')
 
         self._template += self._create_COMCOM_pulling_strings()
 

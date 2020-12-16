@@ -17,11 +17,42 @@ import pytest
 import FSDAMGromacs.mdp_files as mdp_files
 
 
+class Testmake_free_energy_lines():
+    def test_works(self):
+
+        expected = [
+            '; Free energy control stuff', 'free-energy              = yes',
+            'init-lambda              = 1', 'delta-lambda             = -0.1',
+            'couple-moltype           = ALC', 'couple-lambda0           =vdw',
+            'couple-lambda1           =none', 'couple-intramol          =no',
+            'sc-alpha                 = 0.0', 'sc-coul                  = no',
+            'sc-sigma                 = 0.25', 'sc-power                 = 1',
+            'nstdhdl                  = 100', 'separate-dhdl-file       = yes',
+            ''
+        ]
+
+        output = mdp_files.make_free_energy_lines(condition_lambda0='vdw',
+                                                  condition_lambda1='none',
+                                                  alchemical_molecule='ALC',
+                                                  lambda_step=-0.1,
+                                                  starting_lambda=1,
+                                                  couple_intramol='no',
+                                                  sc_alpha=0.0,
+                                                  sc_coul='no',
+                                                  sc_sigma=0.25,
+                                                  sc_power=1,
+                                                  nstdhdl=100,
+                                                  separate_dhdl_file='yes',
+                                                  free_energy='yes')
+
+        assert output == expected
+
+
 class TestMdpFile():
     def test_init(self):
 
         mdp_file = 'mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -46,10 +77,55 @@ class TestMdpFile():
 
         assert output == expected
 
+    def test__create_free_energy_strings(self, mocker):
+
+        mdp_file = 'mdp'
+        alchemical_molecule = 'alc'
+        timestep_ps = 0.002
+        number_of_steps = 1000
+        temperature = 297.20
+        lambda_steps = None
+        COM_pull_goups = None
+
+        instance = mdp_files.MdpFile(mdp_file, alchemical_molecule,
+                                     timestep_ps, number_of_steps, temperature,
+                                     lambda_steps, COM_pull_goups)
+
+        m_free = mocker.patch('FSDAMGromacs.mdp_files.make_free_energy_lines',
+                              return_value=['A', 'B'])
+
+        output = instance._create_free_energy_strings(condition_lambda0='vdw',
+                                                      condition_lambda1='none',
+                                                      starting_lambda=1,
+                                                      couple_intramol='no',
+                                                      sc_alpha=0.0,
+                                                      sc_coul='no',
+                                                      sc_sigma=0.25,
+                                                      sc_power=1,
+                                                      nstdhdl=100,
+                                                      separate_dhdl_file='yes',
+                                                      free_energy='yes')
+
+        assert output == ['A', 'B']
+
+        m_free.assert_called_once_with(condition_lambda0='vdw',
+                                       condition_lambda1='none',
+                                       alchemical_molecule='alc',
+                                       lambda_step=None,
+                                       starting_lambda=1,
+                                       couple_intramol='no',
+                                       sc_alpha=0.0,
+                                       sc_coul='no',
+                                       sc_sigma=0.25,
+                                       sc_power=1,
+                                       nstdhdl=100,
+                                       separate_dhdl_file='yes',
+                                       free_energy='yes')
+
     def test__create_COMCOM_pulling_strings_None(self):
 
         mdp_file = 'mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -65,7 +141,7 @@ class TestMdpFile():
     def test__create_COMCOM_pulling_strings_empty_list(self):
 
         mdp_file = 'mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -81,7 +157,7 @@ class TestMdpFile():
     def test__create_COMCOM_pulling_strings_works(self):
 
         mdp_file = 'mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -128,7 +204,7 @@ class TestMdpFile():
         print('Logging test type for visibility: ' + test_type)
 
         mdp_file = 'mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -147,7 +223,7 @@ class TestMdpFile():
     def test_get_template(self):
 
         mdp_file = 'mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -170,7 +246,7 @@ class TestMdpFile():
             'PythonAuxiliaryFunctions.files_IO.write_file.write_file')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -192,7 +268,7 @@ class TestMdpFile():
         m_write = mocker.patch.object(mdp_files.MdpFile, '_write_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -217,8 +293,12 @@ class TestAnnihilateVdwMdpBoundState():
                                          '_create_COMCOM_pulling_strings',
                                          return_value=['COM'])
 
+        mocked_free = mocker.patch.object(mdp_files.AnnihilateVdwMdpBoundState,
+                                          '_create_free_energy_strings',
+                                          return_value=['FREE'])
+
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -232,6 +312,8 @@ class TestAnnihilateVdwMdpBoundState():
         instance._create_template()
 
         mocked_COM.assert_called_once()
+
+        mocked_free.assert_called_once()
 
         expected_mdp = [
             '; VARIOUS PREPROCESSING OPTIONS',
@@ -347,15 +429,7 @@ class TestAnnihilateVdwMdpBoundState():
             '; rotates over more degrees than',
             'lincs-warnangle          = 30',
             '; Convert harmonic bonds to morse potentials',
-            'morse                    = no', '', '; Free energy control stuff',
-            'free-energy              = yes', 'init-lambda              = 1',
-            f'delta-lambda             = {lambda_steps}',
-            f'couple-moltype           = {alchemical_molecule}',
-            'couple-lambda0           =none', 'couple-lambda1           =vdw',
-            'couple-intramol          =no', 'sc-alpha                 = 0.0',
-            'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', 'nstdhdl                  = 100',
-            'separate-dhdl-file       = yes', '', 'COM'
+            'morse                    = no', '', 'FREE', 'COM'
         ]
 
         assert instance._template == expected_mdp
@@ -366,7 +440,7 @@ class TestAnnihilateVdwMdpBoundState():
             mocker.patch.object(mdp_files.AnnihilateVdwMdpBoundState, '_create_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -389,7 +463,7 @@ class TestAnnihilateVdwMdpBoundState():
             mocker.patch.object(mdp_files.AnnihilateVdwMdpBoundState, '_create_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -414,8 +488,12 @@ class TestAnnihilateQMdpBoundState():
                                          '_create_COMCOM_pulling_strings',
                                          return_value=['COM'])
 
+        mocked_free = mocker.patch.object(mdp_files.AnnihilateQMdpBoundState,
+                                          '_create_free_energy_strings',
+                                          return_value=['FREE'])
+
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -429,6 +507,7 @@ class TestAnnihilateQMdpBoundState():
         instance._create_template()
 
         mocked_COM.assert_called_once()
+        mocked_free.assert_called_once()
 
         expected_mdp = [
             '; VARIOUS PREPROCESSING OPTIONS',
@@ -544,15 +623,7 @@ class TestAnnihilateQMdpBoundState():
             '; rotates over more degrees than',
             'lincs-warnangle          = 30',
             '; Convert harmonic bonds to morse potentials',
-            'morse                    = no', '', '; Free energy control stuff',
-            'free-energy              = yes', 'init-lambda              = 1',
-            f'delta-lambda             = {lambda_steps}',
-            f'couple-moltype           = {alchemical_molecule}',
-            'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
-            'couple-intramol          =no', 'sc-alpha                 = 0.0',
-            'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', 'nstdhdl                  = 100',
-            'separate-dhdl-file       = yes', '', 'COM'
+            'morse                    = no', '', 'FREE', 'COM'
         ]
 
         assert instance._template == expected_mdp
@@ -563,7 +634,7 @@ class TestAnnihilateQMdpBoundState():
             mocker.patch.object(mdp_files.AnnihilateQMdpBoundState, '_create_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -586,7 +657,7 @@ class TestAnnihilateQMdpBoundState():
             mocker.patch.object(mdp_files.AnnihilateQMdpBoundState, '_create_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -611,8 +682,12 @@ class TestCreateVdwMdpUnboundState():
                                          '_create_COMCOM_pulling_strings',
                                          return_value=['COM'])
 
+        mocked_free = mocker.patch.object(mdp_files.CreateVdwMdpUnboundState,
+                                          '_create_free_energy_strings',
+                                          return_value=['FREE'])
+
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -626,6 +701,7 @@ class TestCreateVdwMdpUnboundState():
         instance._create_template()
 
         mocked_COM.assert_called_once()
+        mocked_free.assert_called_once()
 
         expected_mdp = [
             '; VARIOUS PREPROCESSING OPTIONS',
@@ -740,15 +816,7 @@ class TestCreateVdwMdpUnboundState():
             '; rotates over more degrees than',
             'lincs-warnangle          = 30',
             '; Convert harmonic bonds to morse potentials',
-            'morse                    = no', '', '; Free energy control stuff',
-            'free-energy              = yes', 'init-lambda              = 0',
-            f'delta-lambda             = {lambda_steps}',
-            f'couple-moltype           = {alchemical_molecule}',
-            'couple-lambda0           =none', 'couple-lambda1           =vdw',
-            'couple-intramol          =no', 'sc-alpha                 = 0.5',
-            'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', 'nstdhdl                  = 100',
-            'separate-dhdl-file       = yes', '', 'COM'
+            'morse                    = no', '', 'FREE', 'COM'
         ]
 
         assert instance._template == expected_mdp
@@ -759,7 +827,7 @@ class TestCreateVdwMdpUnboundState():
             mocker.patch.object(mdp_files.CreateVdwMdpUnboundState, '_create_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -782,7 +850,7 @@ class TestCreateVdwMdpUnboundState():
             mocker.patch.object(mdp_files.CreateVdwMdpUnboundState, '_create_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -807,8 +875,12 @@ class TestCreateQMdpUnboundState():
                                          '_create_COMCOM_pulling_strings',
                                          return_value=['COM'])
 
+        mocked_free = mocker.patch.object(mdp_files.CreateQMdpUnboundState,
+                                          '_create_free_energy_strings',
+                                          return_value=['FREE'])
+
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -822,6 +894,7 @@ class TestCreateQMdpUnboundState():
         instance._create_template()
 
         mocked_COM.assert_called_once()
+        mocked_free.assert_called_once()
 
         expected_mdp = [
             '; VARIOUS PREPROCESSING OPTIONS',
@@ -936,15 +1009,7 @@ class TestCreateQMdpUnboundState():
             '; rotates over more degrees than',
             'lincs-warnangle          = 30',
             '; Convert harmonic bonds to morse potentials',
-            'morse                    = no', '', '; Free energy control stuff',
-            'free-energy              = yes', 'init-lambda              = 0',
-            f'delta-lambda             = {lambda_steps}',
-            f'couple-moltype           = {alchemical_molecule}',
-            'couple-lambda0           =vdw', 'couple-lambda1           =vdw-q',
-            'couple-intramol          =no', 'sc-alpha                 = 0.5',
-            'sc-coul                  = no', 'sc-sigma                 = 0.25',
-            'sc-power                 = 1', 'nstdhdl                  = 100',
-            'separate-dhdl-file       = yes', '', 'COM'
+            'morse                    = no', '', 'FREE', 'COM'
         ]
 
         assert instance._template == expected_mdp
@@ -955,7 +1020,7 @@ class TestCreateQMdpUnboundState():
             mocker.patch.object(mdp_files.CreateQMdpUnboundState, '_create_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
@@ -978,7 +1043,7 @@ class TestCreateQMdpUnboundState():
             mocker.patch.object(mdp_files.CreateQMdpUnboundState, '_create_template')
 
         mdp_file = 'mdp.mdp'
-        alchemical_molecule = 'alch'
+        alchemical_molecule = 'alc'
         timestep_ps = 0.002
         number_of_steps = 1000
         temperature = 297.20
