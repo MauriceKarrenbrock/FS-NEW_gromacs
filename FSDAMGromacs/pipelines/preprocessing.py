@@ -17,16 +17,13 @@ import FSDAMGromacs.mdp_files as mdp_files
 class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
     """Preprocesses files fot non-equilibrium alchemical transformations
 
-    It is the forst step to make an absolute binding free energy, you must instantiate
+    It is the first step to make an absolute binding free energy, you must instantiate
     and run one instance for the bound and one for the unbound state to use Jarzynki
 
     it inherits from `PythonFSDAM.pipelines.superclasses.PreProcessingPipeline`
 
     Parameters
     -----------
-    alchemical_transformation : str, default='create'
-        can be 'create' if you are creating the alchemical molecule
-        or 'annihilate' if you are annihilating it
     COM_pull_groups : list of str
         check the `mdp_files.MdpFile` for more info
     harmonic_kappa : nested list
@@ -43,9 +40,17 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
             'annihilation': {
                 'timestep_ps': 0.0015,
                 'number_of_steps': 1000000
+            },
+            'creation': {
+                'timestep_ps': 0.001,
+                'number_of_steps': 160000
             }
         },
         'q': {
+            'annihilation': {
+                'timestep_ps': 0.0015,
+                'number_of_steps': 500000
+            },
             'creation': {
                 'timestep_ps': 0.001,
                 'number_of_steps': 160000
@@ -69,7 +74,6 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
                  md_program_path,
                  alchemical_residue,
                  structure_files=None,
-                 alchemical_transformation='create',
                  COM_pull_groups=None,
                  harmonic_kappa=None,
                  temperature=298.15,
@@ -81,8 +85,6 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
                          alchemical_residue=alchemical_residue,
                          structure_files=structure_files,
                          temperature=temperature)
-
-        self.alchemical_transformation = alchemical_transformation
 
         self.COM_pull_groups = COM_pull_groups
 

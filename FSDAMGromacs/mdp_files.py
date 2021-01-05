@@ -118,7 +118,7 @@ def create_COMCOM_pulling_strings(COM_pull_goups,
     harmonic_kappa : list
         [ ["group_1", "group_2", harmonic_kappa_value], ... ] (str, str, float)
         it is a nested list containing the couple-couple harmonic kappa value
-        for the umbrella COM-COM pulling, a good numbe may be 120
+        for the umbrella COM-COM pulling, a good number may be 120
         if you don't want to groups to pull each other set kappa to 0
     pbc_atoms : iterable of int, optional
         an iterable containing the number of each nearest atom to the
