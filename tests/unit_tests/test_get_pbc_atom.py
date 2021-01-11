@@ -59,7 +59,7 @@ class Testget_protein_pbc_atom():
         m_com = mocker.patch('PythonPDBStructures.geometry.get_center_of_mass',
                              return_value=Geo)
 
-        output = pbc.get_protein_pbc_atom('DUMMY.pdb')
+        output = pbc.get_protein_pbc_atom('DUMMY.pdb', 'some_selection')
 
         assert output == 1
 

@@ -8,6 +8,8 @@
 """Functions to get the pbc atom
 """
 
+import sys
+
 import MDAnalysis as mda
 import numpy as np
 import PythonPDBStructures.geometry as _geo
@@ -15,7 +17,8 @@ import PythonPDBStructures.pdb.add_chain_id as _chain_id
 import PythonPDBStructures.pdb.biopython_utils as _bio
 
 
-def get_protein_pbc_atom(structure_file):
+def get_protein_pbc_atom(structure_file,
+                         mdanalysis_selection_string='protein'):
     """Get the number of the nearest atom to the geometrical center of the Protein
 
     it uses `MDAnalysis` and `Biopython`
@@ -24,6 +27,9 @@ def get_protein_pbc_atom(structure_file):
     ------------
     structure_file : str or Path
         the file (gro, pdb, ...) contining the protein and other stuff
+    mdanalysis_selection_string : str, optional, default='protein'
+        the sring to use for `MDAnalysis.Universe.select_atoms` method if you want the pbc atom
+        of a protein the default is perfecto, otherwise check MDAnalysis documentation online
 
     Returns
     ----------
@@ -37,11 +43,11 @@ def get_protein_pbc_atom(structure_file):
 
         structure_file = str(structure_file)
 
-    tmp_file = 'TMP_only_protein.pdb'
+    tmp_file = 'TMP_for_pbc_atom.pdb'
 
     universe = mda.Universe(structure_file)
 
-    atoms = universe.select_atoms('protein')
+    atoms = universe.select_atoms(mdanalysis_selection_string)
 
     atoms.write(tmp_file)
 
@@ -53,7 +59,7 @@ def get_protein_pbc_atom(structure_file):
 
     atoms = struct.get_atoms()
 
-    min_dist = 1.E+20
+    min_dist = sys.float_info.max
 
     output_atom = None
 
