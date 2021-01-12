@@ -8,6 +8,8 @@
 """Pipeline classes for preprocessing
 """
 
+import pathlib
+
 import PythonFSDAM.pipelines.superclasses as superclasses
 
 import FSDAMGromacs.get_pbc_atom as get_pbc_atom
@@ -154,6 +156,33 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
         creator.execute()
 
+    @staticmethod
+    def _get_suffix(path):
+        """helper function to get file suffixes
+
+        both for str and for pathlib.Path
+        """
+
+        if isinstance(path, str):
+
+            return path[-4:]
+
+        return path.suffix
+
+    def _get_relative_path(self):
+        """makes all paths relative to the CWD
+        """
+
+        for path_list in (self.topology_files, self.structure_files):
+
+            for i, path in enumerate(path_list):
+
+                if not isinstance(path, pathlib.Path):
+
+                    path = pathlib.Path(path)
+
+                path_list[i] = path.relative_to(pathlib.Path().cwd())
+
     def execute(self):
         # pylint: disable=line-too-long
         """This method preprocesses the bound or unbound NE Alchemical transformations
@@ -191,6 +220,8 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
         #create the output dictionary
         output_dictionary = {}
 
+        self._get_relative_path()
+
         if self.creation:
 
             mdp_type = 'creation'
@@ -214,7 +245,7 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
         #find the .top file (there are also .itp)
         for i in self.topology_files:
 
-            if i[-4:] == '.top':
+            if self._get_suffix(i) == '.top':
 
                 top_file = i
 

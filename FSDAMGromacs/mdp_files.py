@@ -135,7 +135,10 @@ def create_COMCOM_pulling_strings(COM_pull_goups,
 
     pull_ngroups = len(COM_pull_goups)
 
-    pull_ncoords = pull_ngroups
+    pull_ncoords = 0
+    for i in range(pull_ngroups - 1, 0, -1):
+
+        pull_ncoords += i
 
     pull_groups_name_number = {}
     pull_group_name = ''
