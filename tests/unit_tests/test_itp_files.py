@@ -46,8 +46,7 @@ class Testcreate_dummy_atom_itp():
             '; Atomic types, pdb names  and groups are defined below',
             '',
             '[ atoms ]',
-            ';AT.NUM   TYPE   RESID   RESNAME PDB-NAME  IGRP    CHRGE',
-            '    MASS',
+            ';AT.NUM   TYPE   RESID   RESNAME PDB-NAME  IGRP    CHRGE    MASS',
             f'  1   {name[0:2]}     1      {name}     {name}      {charge_group}    {charge}    {mass}',  # pylint: disable=line-too-long
             ''
         ]
