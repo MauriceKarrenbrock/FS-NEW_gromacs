@@ -170,7 +170,7 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
             q_files = []
 
-            for i in range(self.structure_files):
+            for i in range(len(self.structure_files)):
 
                 q_files.append(f'vdw_{mdp_type}_{i}.gro')
 
@@ -182,7 +182,7 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
             vdw_files = []
 
-            for i in range(self.structure_files):
+            for i in range(len(self.structure_files)):
 
                 vdw_files.append(f'q_{mdp_type}_{i}.gro')
 
