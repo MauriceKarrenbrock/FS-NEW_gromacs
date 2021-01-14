@@ -156,6 +156,68 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
         creator.execute()
 
+    def _make_tpr_lines(self, mdp_type, top_file, vdw_mdp, q_mdp):
+        """PRIVATE
+
+        makes the lines to create the TPR files
+
+        RETURNS
+        ----------
+        make_vdw_tpr_commands, make_q_tpr_commands, vdw_tpr_files, q_tpr_files : list(str), list(str), list(str), list(str)
+        """  # pylint: disable=line-too-long
+
+        if self.creation:
+
+            q_files = [
+                f'vdw_{mdp_type}_{i}.gro' for i in range(self.structure_files)
+            ]
+
+            vdw_files = self.structure_files
+
+        else:
+
+            q_files = self.structure_files
+
+            vdw_files = [
+                f'q_{mdp_type}_{i}.gro' for i in range(self.structure_files)
+            ]
+
+        #create the create tpr commands in the right order and way
+
+        #make vdw tpr files
+
+        make_vdw_tpr_commands = []
+
+        vdw_tpr_files = []
+
+        for i, item in enumerate(vdw_files):
+
+            command_string = \
+                f'{self.md_program_path} grompp -f {vdw_mdp} ' + \
+                    f'-c {item} -p {top_file} -o vdw_{mdp_type}_{i}.tpr -maxwarn 100'
+
+            make_vdw_tpr_commands.append(command_string)
+
+            vdw_tpr_files.append(f'vdw_{mdp_type}_{i}.tpr')
+
+        #make q tpr files
+
+        make_q_tpr_commands = []
+
+        q_tpr_files = []
+
+        for i, item in enumerate(q_files):
+
+            command_string = \
+                f'{self.md_program_path} grompp -f {q_mdp} ' + \
+                    f'-c {item} -p {top_file} -o q_{mdp_type}_{i}.tpr -maxwarn 100'
+
+            make_q_tpr_commands.append(command_string)
+
+            q_tpr_files.append(f'q_{mdp_type}_{i}.tpr')
+
+        return make_vdw_tpr_commands, make_q_tpr_commands, vdw_tpr_files, q_tpr_files
+
     @staticmethod
     def _get_suffix(path):
         """helper function to get file suffixes
@@ -255,42 +317,12 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
             raise ValueError('You gave no .top file as input')
 
         #create the create tpr commands in the right order and way
-
-        #make vdw tpr files
-
-        make_vdw_tpr_commands = []
-
-        vdw_tpr_files = []
-
-        for i, item in enumerate(self.structure_files):
-
-            command_string = \
-                f'{self.md_program_path} grompp -f {output_dictionary["vdw_mdp"]} ' + \
-                    f'-c {item} -p {top_file} -o vdw_{mdp_type}_{i}.tpr -maxwarn 100'
-
-            make_vdw_tpr_commands.append(command_string)
-
-            vdw_tpr_files.append(f'vdw_{mdp_type}_{i}.tpr')
-
-        output_dictionary['make_vdw_tpr'] = make_vdw_tpr_commands
-
-        #make q tpr files
-
-        make_q_tpr_commands = []
-
-        q_tpr_files = []
-
-        for i, item in enumerate(self.structure_files):
-
-            command_string = \
-                f'{self.md_program_path} grompp -f {output_dictionary["q_mdp"]} ' + \
-                    f'-c {item} -p {top_file} -o q_{mdp_type}_{i}.tpr -maxwarn 100'
-
-            make_q_tpr_commands.append(command_string)
-
-            q_tpr_files.append(f'q_{mdp_type}_{i}.tpr')
-
-        output_dictionary['make_q_tpr'] = make_q_tpr_commands
+        (output_dictionary['make_vdw_tpr'], output_dictionary['make_q_tpr'],
+         vdw_tpr_files, q_tpr_files) = (self._make_tpr_lines(
+             mdp_type=mdp_type,
+             top_file=top_file,
+             vdw_mdp=output_dictionary['vdw_mdp'],
+             q_mdp=output_dictionary['q_mdp']))
 
         #create the right run strings
 
