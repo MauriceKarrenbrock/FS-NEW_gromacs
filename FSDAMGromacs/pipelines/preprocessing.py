@@ -168,9 +168,11 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
         if self.creation:
 
-            q_files = [
-                f'vdw_{mdp_type}_{i}.gro' for i in range(self.structure_files)
-            ]
+            q_files = []
+
+            for i in range(self.structure_files):
+
+                q_files.append(f'vdw_{mdp_type}_{i}.gro')
 
             vdw_files = self.structure_files
 
@@ -178,9 +180,11 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
             q_files = self.structure_files
 
-            vdw_files = [
-                f'q_{mdp_type}_{i}.gro' for i in range(self.structure_files)
-            ]
+            vdw_files = []
+
+            for i in range(self.structure_files):
+
+                vdw_files.append(f'q_{mdp_type}_{i}.gro')
 
         #create the create tpr commands in the right order and way
 
