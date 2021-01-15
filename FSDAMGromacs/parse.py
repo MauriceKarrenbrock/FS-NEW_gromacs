@@ -32,7 +32,7 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
     def parse(file_name, abs_lambda_max_val=1.0):  # pylint: disable=arguments-differ
         """Parses a dhdl.xvg file
 
-        converts the work from KJ/mol to Kcal/mol (1 Kcal = 1/4.148 KJ)
+        converts the work from KJ/mol to Kcal/mol (1 Kcal = 0.23901 KJ)
 
         Parameters
         -----------
@@ -54,7 +54,7 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         ---------
         will take for granted that the first column
         is time and the second is dH/dL and that the value of
-        lambda is gone from 0 to 1 (or vice-versa) during the run
+        lambda is gone from 0 to `abs_lambda_max_val` (or vice-versa) during the run
         with constant speed
         """
 
@@ -68,7 +68,7 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         parsed_file[:, 0] = tmp * delta_lambda
 
         #from KJ/mol to Kcal/mol
-        parsed_file[:, 1] = parsed_file[:, 1] * (1. / 4.148)
+        parsed_file[:, 1] = parsed_file[:, 1] * 0.23901
 
         #in this way I have a line with all lambdas and a line with all
         #dhdl
