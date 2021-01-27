@@ -11,7 +11,52 @@
 import re
 
 import numpy as np
+import pandas as pd
 import PythonFSDAM.parse.parse_superclasses as superclasses
+
+
+def parse_big_gromacs_xvg_files(file_name, comments=None):
+    """parses quickly big gromacs xvg files
+
+    as numpy.loadtxt is too slow to parse houndreds of files
+    I did this helper function to use pandas.read_csv
+
+    this function cannot deal with footers but only headers
+
+    Parameters
+    ------------
+    file_name : str or path
+        the file to parse
+    comments : interable(str), optional, default=['#', '@']
+        lines in the header to jump
+
+    Returns
+    -------------
+    np.array
+        like the one obtained from loadtxt on the same file
+    """
+
+    if comments is None:
+
+        comments = ['#', '@']
+
+    with open(file_name, 'r') as f:
+
+        j = 0
+        for line in f:
+
+            if line.strip()[0] not in comments:
+                break
+
+            j += 1
+
+    output = pd.read_csv(file_name,
+                         skiprows=j,
+                         skipinitialspace=True,
+                         sep=' ',
+                         header=None)
+
+    return np.array(output)
 
 
 class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
@@ -29,7 +74,7 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
     This class will convert the time column in lambda column
     """
     @staticmethod
-    def parse(file_name, abs_lambda_max_val=1.0):  # pylint: disable=arguments-differ
+    def parse(file_name, starting_lambda=1.0, ending_lambda=0.):  # pylint: disable=arguments-differ
         """Parses a dhdl.xvg file
 
         converts the work from KJ/mol to Kcal/mol (1 Kcal = 0.23901 KJ)
@@ -38,9 +83,13 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         -----------
         file_name : str
             the file to parse
-        abs_lambda_max_val : float, optional
-            the maximum absolute value that ambda had during the run
-            usually 1.0 (default)
+        starting_lambda : float, optional, default=1.0
+            the value of lambda at the beginning of the run
+            usually 1.0 for annihilation and 0. for creation
+        ending_lambda : float, optional, default=0.0
+            the value of lambda at the end of the run
+            usually 0. for annihilation and 1.0 for creation
+
 
         Returns
         ---------
@@ -58,12 +107,24 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         with constant speed
         """
 
-        parsed_file = np.loadtxt(file_name, comments=['#', '@'], delimiter=' ')
+        if starting_lambda == ending_lambda:
+            raise ValueError(
+                'Beginning and end lambda cannot be the same value')
+
+        parsed_file = parse_big_gromacs_xvg_files(file_name)
 
         #parsed file is time vs dhdl but I want lambda vs dhdl
-        delta_lambda = abs_lambda_max_val / float(len(parsed_file[:, 0]) - 1)
+        delta_lambda = (ending_lambda -
+                        starting_lambda) / float(len(parsed_file[:, 0]) - 1)
 
         tmp = np.arange(len(parsed_file[:, 0]))
+
+        # otherwise parsed_file[:, 0] would go from zero to -1
+        if delta_lambda < 0:
+
+            tmp = np.flip(tmp)
+
+            delta_lambda = abs(delta_lambda)
 
         parsed_file[:, 0] = tmp * delta_lambda
 
@@ -134,7 +195,7 @@ class GromacsParsePullDistances(superclasses.Parser):
         # @ s12 legend "2 g 2 Y"
         # @ s13 legend "2 g 2 Z"
 
-        parsed_file = np.loadtxt(file_name, comments=['#', '@'], delimiter=' ')
+        parsed_file = parse_big_gromacs_xvg_files(file_name)
 
         #from nm to angstrom
         parsed_file = parsed_file * 10.
