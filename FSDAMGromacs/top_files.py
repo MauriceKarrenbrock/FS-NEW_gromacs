@@ -50,6 +50,9 @@ def add_include_after_FF(include_line, input_top_file, output_top_file):
 def add_include_after_atomtypes(include_line, input_top_file, output_top_file):
     """adds an include statement after atomtypes
 
+    It checks for the beginning of a [ ... ] section that is not [ atomtypes ]
+    and for the beginning of a #ifdef
+
     Parameters
     -----------
     include_line : str
@@ -70,9 +73,16 @@ def add_include_after_atomtypes(include_line, input_top_file, output_top_file):
 
     for i in range(len(input_top_lines)):
 
-        if input_top_lines[i].strip() != '':
-            if (input_top_lines[i].strip()[0] == '[') and \
-                (not '[ atomtypes ]' in input_top_lines[i].strip()):
+        if input_top_lines[i].strip():
+
+            #complex bool expession
+            #check both for the end of [ atomtypes ] and for the beginning of a #ifdef
+            is_right_line = (  # pylint: disable=consider-using-ternary
+                ((input_top_lines[i].strip()[0] == '[') and
+                 (not '[ atomtypes ]' in input_top_lines[i].strip()))
+                or (input_top_lines[i].strip()[0:6] == '#ifdef'))
+
+            if is_right_line:
 
                 input_top_lines[i] = \
                 f'\n#include "{include_line}"\n{input_top_lines[i].strip()}\n'
