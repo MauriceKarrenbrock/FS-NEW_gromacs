@@ -11,7 +11,12 @@
 import PythonAuxiliaryFunctions.run as run
 
 
-def make_tpr_file(mdp_file, gro_file, top_file, tpr_file, gromacs_path='gmx'):
+def make_tpr_file(mdp_file,
+                  gro_file,
+                  top_file,
+                  tpr_file,
+                  gromacs_path='gmx',
+                  shell=False):
     """makes a tpr file
 
     it calls gromacs to make a tpr file locally
@@ -33,6 +38,9 @@ def make_tpr_file(mdp_file, gro_file, top_file, tpr_file, gromacs_path='gmx'):
     gromacs_path : str
         the ABSOLUTE PATH to the gromacs executable
         (default gmx)
+    shell : bool, optional, default=False
+        if true it will make the command pass through the
+        linux shell (less safe)
     """
 
     command = [
@@ -40,9 +48,13 @@ def make_tpr_file(mdp_file, gro_file, top_file, tpr_file, gromacs_path='gmx'):
         '-p', f'{top_file}', '-maxwarn', '100', '-o', f'{tpr_file}'
     ]
 
+    if shell:
+
+        command = ' '.join(command)
+
     error = 'Could not create the TPR file, check the stdout and stderr printed above for more info'
 
     run.subprocess_run(commands=command,
-                       shell=False,
+                       shell=shell,
                        universal_newlines=True,
                        error_string=error)
