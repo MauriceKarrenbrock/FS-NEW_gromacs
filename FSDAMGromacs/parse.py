@@ -13,6 +13,7 @@ import re
 import numpy as np
 import pandas as pd
 import PythonFSDAM.parse.parse_superclasses as superclasses
+from simtk import unit
 
 
 def parse_big_gromacs_xvg_files(file_name, comments=None):
@@ -128,12 +129,16 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
 
         parsed_file[:, 0] = tmp * delta_lambda
 
-        #from KJ/mol to Kcal/mol
-        parsed_file[:, 1] = parsed_file[:, 1] * 0.23901
-
         #in this way I have a line with all lambdas and a line with all
         #dhdl
-        return parsed_file.transpose()
+        parsed_file = parsed_file.transpose()
+
+        #from KJ/mol to Kcal/mol
+        tmp = parsed_file[1] * unit.kilojoules_per_mole
+        print(tmp)
+        parsed_file[1] = tmp.value_in_unit(unit.kilocalories_per_mole)
+
+        return parsed_file
 
 
 class GromacsParsePullDistances(superclasses.Parser):

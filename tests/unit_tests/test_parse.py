@@ -11,6 +11,7 @@
 #############################################################
 
 import numpy as np
+from simtk import unit
 
 import FSDAMGromacs.parse as parse
 
@@ -27,7 +28,11 @@ class TestGromacsParseWorkProfile():
 
         expected_output = np.array(expected_output)
 
-        expected_output[1, :] = expected_output[1, :] * 0.23901
+        kjmol_kcalmol_conversion = unit.kilojoules_per_mole.conversion_factor_to(
+            unit.kilocalories_per_mole)  # 0.23901
+
+        expected_output[
+            1, :] = expected_output[1, :] * kjmol_kcalmol_conversion
 
         mocked_parse = mocker.patch(
             'FSDAMGromacs.parse.parse_big_gromacs_xvg_files',
