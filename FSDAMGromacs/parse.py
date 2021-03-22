@@ -135,7 +135,6 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
 
         #from KJ/mol to Kcal/mol
         tmp = parsed_file[1] * unit.kilojoules_per_mole
-        print(tmp)
         parsed_file[1] = tmp.value_in_unit(unit.kilocalories_per_mole)
 
         return parsed_file
