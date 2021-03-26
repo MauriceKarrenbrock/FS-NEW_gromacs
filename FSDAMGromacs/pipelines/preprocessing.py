@@ -41,11 +41,11 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
         'vdw': {
             'annihilation': {
                 'timestep_ps': 0.0015,
-                'number_of_steps': 1000000
+                'number_of_steps': 800000
             },
             'creation': {
                 'timestep_ps': 0.001,
-                'number_of_steps': 160000
+                'number_of_steps': 250000
             }
         },
         'q': {
@@ -55,7 +55,7 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
             },
             'creation': {
                 'timestep_ps': 0.001,
-                'number_of_steps': 160000
+                'number_of_steps': 250000
             }
         },
     }

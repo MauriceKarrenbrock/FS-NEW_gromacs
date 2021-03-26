@@ -22,11 +22,11 @@ def make_free_energy_lines(condition_lambda0,
                            lambda_step,
                            starting_lambda=0,
                            couple_intramol='no',
-                           sc_alpha=0.0,
+                           sc_alpha=0.5,
                            sc_coul='no',
                            sc_sigma=0.25,
                            sc_power=1,
-                           nstdhdl=100,
+                           nstdhdl=50,
                            separate_dhdl_file='yes',
                            free_energy='yes'):
     """Get the free energy lines of a mdp_file
@@ -50,7 +50,7 @@ def make_free_energy_lines(condition_lambda0,
     couple_intramol : str, optional, default='no'
         check the mdp documentation on the gromacs website
         don't use this options if you don't know what you are doing
-    sc_alpha : float, optional, default=0.0
+    sc_alpha : float, optional, default=0.5
         check the mdp documentation on the gromacs website
         don't use this options if you don't know what you are doing
     sc_coul : str, optional, default='no'
@@ -62,7 +62,7 @@ def make_free_energy_lines(condition_lambda0,
     sc_power : int, optional, default=1
         check the mdp documentation on the gromacs website
         don't use this options if you don't know what you are doing
-    nstdhdl : int, optional, default=100
+    nstdhdl : int, optional, default=50
         check the mdp documentation on the gromacs website
         don't use this options if you don't know what you are doing
     separate_dhdl_file : str, optional, default='yes'
@@ -264,13 +264,13 @@ class MdpFile(object):
 
     * vdw creation:
         * `timestep_ps` = 0.001
-        * `number_of_steps` = 160000
+        * `number_of_steps` = 250000
     * q creation:
         * `timestep_ps` = 0.001
-        * `number_of_steps` = 160000
+        * `number_of_steps` = 250000
     * vdw annihilation:
         * `timestep_ps` = 0.0015
-        * `number_of_steps` = 1000000
+        * `number_of_steps` = 800000
     * q annihilation:
         * `timestep_ps` = 0.0015
         * `number_of_steps` = 500000
@@ -318,11 +318,11 @@ class MdpFile(object):
                                     condition_lambda1,
                                     starting_lambda,
                                     couple_intramol='no',
-                                    sc_alpha=0.0,
+                                    sc_alpha=0.5,
                                     sc_coul='no',
                                     sc_sigma=0.25,
                                     sc_power=1,
-                                    nstdhdl=100,
+                                    nstdhdl=50,
                                     separate_dhdl_file='yes',
                                     free_energy='yes'):
         """Makes the free energy strings
@@ -626,8 +626,7 @@ class AnnihilateVdwMdpBoundState(MdpFile):
             'nstvout                  = 10000',
             'nstfout                  = 10000',
             '; Output frequency for energies to log file and energy file',
-            'nstlog                   = 1000',
-            'nstcalcenergy            = 100',
+            'nstlog                   = 1000', 'nstcalcenergy            = 50',
             'nstenergy                = 1000',
             '; Output frequency and precision for .xtc file',
             'nstxtcout                = 2000',
@@ -721,11 +720,11 @@ class AnnihilateVdwMdpBoundState(MdpFile):
             condition_lambda1='vdw',
             starting_lambda=1,
             couple_intramol='no',
-            sc_alpha=0.0,
+            sc_alpha=0.5,
             sc_coul='no',
             sc_sigma=0.25,
             sc_power=1,
-            nstdhdl=100,
+            nstdhdl=50,
             separate_dhdl_file='yes',
             free_energy='yes')
 
@@ -781,8 +780,7 @@ class AnnihilateQMdpBoundState(MdpFile):
             'nstvout                  = 10000',
             'nstfout                  = 10000',
             '; Output frequency for energies to log file and energy file',
-            'nstlog                   = 1000',
-            'nstcalcenergy            = 100',
+            'nstlog                   = 1000', 'nstcalcenergy            = 50',
             'nstenergy                = 1000',
             '; Output frequency and precision for .xtc file',
             'nstxtcout                = 2000',
@@ -876,11 +874,11 @@ class AnnihilateQMdpBoundState(MdpFile):
             condition_lambda1='vdw-q',
             starting_lambda=1,
             couple_intramol='no',
-            sc_alpha=0.0,
+            sc_alpha=0.5,
             sc_coul='no',
             sc_sigma=0.25,
             sc_power=1,
-            nstdhdl=100,
+            nstdhdl=50,
             separate_dhdl_file='yes',
             free_energy='yes')
 
@@ -935,7 +933,7 @@ class CreateVdwMdpUnboundState(MdpFile):
             'nstvout                  = 10000',
             'nstfout                  = 10000',
             '; Output frequency for energies to log file and energy file',
-            'nstlog                   = 500', 'nstcalcenergy            = 100',
+            'nstlog                   = 500', 'nstcalcenergy            = 50',
             'nstenergy                = 1000',
             '; Output frequency and precision for .xtc file',
             'nstxtcout                = 2000',
@@ -1033,7 +1031,7 @@ class CreateVdwMdpUnboundState(MdpFile):
             sc_coul='no',
             sc_sigma=0.25,
             sc_power=1,
-            nstdhdl=100,
+            nstdhdl=50,
             separate_dhdl_file='yes',
             free_energy='yes')
 
@@ -1089,7 +1087,7 @@ class CreateQMdpUnboundState(MdpFile):
             'nstvout                  = 10000',
             'nstfout                  = 10000',
             '; Output frequency for energies to log file and energy file',
-            'nstlog                   = 500', 'nstcalcenergy            = 100',
+            'nstlog                   = 500', 'nstcalcenergy            = 50',
             'nstenergy                = 1000',
             '; Output frequency and precision for .xtc file',
             'nstxtcout                = 2000',
@@ -1187,7 +1185,7 @@ class CreateQMdpUnboundState(MdpFile):
             sc_coul='no',
             sc_sigma=0.25,
             sc_power=1,
-            nstdhdl=100,
+            nstdhdl=50,
             separate_dhdl_file='yes',
             free_energy='yes')
 
