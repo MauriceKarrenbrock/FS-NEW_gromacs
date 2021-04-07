@@ -35,6 +35,23 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
     creation : bool, default=True
         if True it will make a creation of the alchemical molecule
         if false an annihilation
+    vdw_timestep_ps : float, optional
+        timestep in ps for vdw alchemical transformation
+        the default will be ok most of the times
+    q_timestep_ps : float, optional
+        timestep in ps for q alchemical transformation
+        the default will be ok most of the times
+    vdw_number_of_steps : int, optional
+        number of md steps for vdw alchemical transformation
+        the default will be ok most of the times
+    q_number_of_steps : int, optional
+        number of md steps for q alchemical transformation
+        the default will be ok most of the times
+
+    Attributes
+    ------------
+    DEFAULTS : dict
+        the defaults for the alchemical tranformations
     """
 
     DEFAULTS = {
@@ -80,7 +97,12 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
                  harmonic_kappa=None,
                  temperature=298.15,
                  pbc_atoms=None,
-                 creation=True):
+                 constraints=None,
+                 creation=True,
+                 vdw_timestep_ps=None,
+                 q_timestep_ps=None,
+                 vdw_number_of_steps=None,
+                 q_number_of_steps=None):
 
         super().__init__(topology_files=topology_files,
                          md_program_path=md_program_path,
@@ -94,7 +116,17 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
         self.pbc_atoms = pbc_atoms
 
+        self.constraints = constraints
+
         self.creation = creation
+
+        self.vdw_timestep_ps = vdw_timestep_ps
+
+        self.q_timestep_ps = q_timestep_ps
+
+        self.vdw_number_of_steps = vdw_number_of_steps
+
+        self.q_number_of_steps = q_number_of_steps
 
         self.md_program = 'gromacs'
 
@@ -142,17 +174,55 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
         self._update_pbc_atoms()
 
-        creator = PreprocessGromacsFSDAM.MDP_CLASSES[mdp_type[0]][mdp_type[1]](
+        ##############################################
+        #set some defaults if no input has been given
+        if mdp_type[0] == 'vdw':
+
+            if self.vdw_timestep_ps is None:
+
+                ts = self.DEFAULTS[mdp_type[0]][mdp_type[1]]['timestep_ps']
+
+            else:
+
+                ts = self.vdw_timestep_ps
+
+            if self.vdw_number_of_steps is None:
+
+                n = self.DEFAULTS[mdp_type[0]][mdp_type[1]]['number_of_steps']
+
+            else:
+
+                n = self.vdw_timestep_ps
+
+        elif mdp_type[0] == 'q':
+
+            if self.q_timestep_ps is None:
+
+                ts = self.DEFAULTS[mdp_type[0]][mdp_type[1]]['timestep_ps']
+
+            else:
+
+                ts = self.q_timestep_ps
+
+            if self.q_number_of_steps is None:
+
+                n = self.DEFAULTS[mdp_type[0]][mdp_type[1]]['number_of_steps']
+
+            else:
+
+                n = self.q_timestep_ps
+        ##############################################
+
+        creator = self.MDP_CLASSES[mdp_type[0]][mdp_type[1]](
             mdp_file=mdp_file,
-            timestep_ps=PreprocessGromacsFSDAM.DEFAULTS[mdp_type[0]][
-                mdp_type[1]]['timestep_ps'],
-            number_of_steps=PreprocessGromacsFSDAM.DEFAULTS[mdp_type[0]][
-                mdp_type[1]]['number_of_steps'],  # pylint: disable=line-too-long
+            timestep_ps=ts,
+            number_of_steps=n,
             alchemical_molecule=self.alchemical_residue,
             temperature=self.temperature,
             COM_pull_goups=self.COM_pull_groups,
             harmonic_kappa=self.harmonic_kappa,
-            pbc_atoms=self.pbc_atoms)
+            pbc_atoms=self.pbc_atoms,
+            constraints=self.constraints)
 
         creator.execute()
 

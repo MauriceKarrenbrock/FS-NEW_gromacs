@@ -243,6 +243,9 @@ class MdpFile(object):
         must be as long as `COM_pull_goups`, for small molecules
         you can set it to zero (gromacs will guess it) for big ones (proteins)
         it must be given, if you keep it None it will gess it on any molecule
+    constraints : str, optional, default=all-bonds
+        which bounds to constrain, the syntax is tha same as the gromacs one
+        none, h-bonds, all-bonds
 
 
     Methods
@@ -284,7 +287,8 @@ class MdpFile(object):
                  lambda_steps=None,
                  COM_pull_goups=None,
                  harmonic_kappa=None,
-                 pbc_atoms=None):
+                 pbc_atoms=None,
+                 constraints=None):
 
         if mdp_file[-4:] != '.mdp':
             mdp_file += '.mdp'
@@ -306,6 +310,12 @@ class MdpFile(object):
         self.harmonic_kappa = harmonic_kappa
 
         self.pbc_atoms = pbc_atoms
+
+        if constraints is None:
+
+            constraints = 'all-bonds'
+
+        self.constraints = constraints
 
         self._template = []
 
@@ -551,7 +561,7 @@ class BasicMdpFileMixIn(object):
                 1), '; Scaling of reference coordinates, No, All or COM',
             'refcoord-scaling         = COM', '',
             '; GENERATE VELOCITIES FOR STARTUP RUN',
-            'gen-vel                  = no', 'gen-temp                 = 500',
+            'gen-vel                  = yes', 'gen-temp                 = 500',
             'gen-seed                 = 173529', '', '; OPTIONS FOR BONDS',
             make_key_value_string_with_default(
                 'constraints', 'none'), '; Type of constraint algorithm',
@@ -692,9 +702,10 @@ class AnnihilateVdwMdpBoundState(MdpFile):
             '; Scaling of reference coordinates, No, All or COM',
             'refcoord-scaling         = COM', '',
             '; GENERATE VELOCITIES FOR STARTUP RUN',
-            'gen-vel                  = no', 'gen-temp                 = 500',
+            'gen-vel                  = yes',
+            f'gen-temp                 = {self.temperature}',
             'gen-seed                 = 173529', '', '; OPTIONS FOR BONDS',
-            'constraints              = all-bonds',
+            f'constraints              = {self.constraints}',
             '; Type of constraint algorithm',
             'constraint-algorithm     = Lincs',
             '; Do not constrain the start configuration',
@@ -846,9 +857,10 @@ class AnnihilateQMdpBoundState(MdpFile):
             '; Scaling of reference coordinates, No, All or COM',
             'refcoord-scaling         = COM', '',
             '; GENERATE VELOCITIES FOR STARTUP RUN',
-            'gen-vel                  = no', 'gen-temp                 = 500',
+            'gen-vel                  = yes',
+            f'gen-temp                 = {self.temperature}',
             'gen-seed                 = 173529', '', '; OPTIONS FOR BONDS',
-            'constraints              = all-bonds',
+            f'constraints              = {self.constraints}',
             '; Type of constraint algorithm',
             'constraint-algorithm     = Lincs',
             '; Do not constrain the start configuration',
@@ -999,9 +1011,10 @@ class CreateVdwMdpUnboundState(MdpFile):
             '; Scaling of reference coordinates, No, All or COM',
             'refcoord-scaling         = COM', '',
             '; GENERATE VELOCITIES FOR STARTUP RUN',
-            'gen-vel                  = no', 'gen-temp                 = 500',
+            'gen-vel                  = yes',
+            f'gen-temp                 = {self.temperature}',
             'gen-seed                 = 173529', '', '; OPTIONS FOR BONDS',
-            'constraints              = all-bonds',
+            f'constraints              = {self.constraints}',
             '; Type of constraint algorithm',
             'constraint-algorithm     = Lincs',
             '; Do not constrain the start configuration',
@@ -1153,9 +1166,10 @@ class CreateQMdpUnboundState(MdpFile):
             '; Scaling of reference coordinates, No, All or COM',
             'refcoord-scaling         = COM', '',
             '; GENERATE VELOCITIES FOR STARTUP RUN',
-            'gen-vel                  = no', 'gen-temp                 = 500',
+            'gen-vel                  = yes',
+            f'gen-temp                 = {self.temperature}',
             'gen-seed                 = 173529', '', '; OPTIONS FOR BONDS',
-            'constraints              = all-bonds',
+            f'constraints              = {self.constraints}',
             '; Type of constraint algorithm',
             'constraint-algorithm     = Lincs',
             '; Do not constrain the start configuration',
