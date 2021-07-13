@@ -359,7 +359,10 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
         #create the output dictionary
         output_dictionary = {}
 
-        self._get_relative_path()
+        try:
+            self._get_relative_path()
+        except ValueError:
+            pass
 
         if self.creation:
 
