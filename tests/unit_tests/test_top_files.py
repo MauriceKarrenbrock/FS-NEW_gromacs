@@ -36,18 +36,44 @@ class Testadd_include_after_FF():
 
         m_write.assert_called_once_with(expected, 'output')
 
+    def test_no_FF_include(self, mocker):
+
+        top_file = [
+            '\n', ';\n', 'AAAAAA\n', '[ defaults ]\n', 'AAAAAA\n',
+            '[ atomtypes ]\n', 'AAAAAAAAA\n'
+        ]
+
+        expected = [
+            '\n', ';\n', 'AAAAAA\n', '[ defaults ]\n', 'AAAAAA\n',
+            '\n#include "new_included_stuff"\n[ atomtypes ]\n', 'AAAAAAAAA\n'
+        ]
+
+        m_read = mocker.patch(
+            'PythonAuxiliaryFunctions.files_IO.read_file.read_file',
+            return_value=top_file)
+
+        m_write = mocker.patch(
+            'PythonAuxiliaryFunctions.files_IO.write_file.write_file')
+
+        top_files.add_include_after_FF('new_included_stuff', 'input', 'output')
+
+        m_read.assert_called_once_with('input')
+
+        m_write.assert_called_once_with(expected, 'output')
+
 
 class Testadd_include_after_atomtypes():
     def test_works(self, mocker):
 
         top_file = [
-            '\n', ';\n', 'AAAAAA\n', '#include "stuff"\n', 'AAAAAA\n',
-            '[ atomtypes ]\n', 'AAAAA\n', '[ moleculetypes ]\n', 'AAAAA\n'
+            '[ defaults ]\n', '\n', ';\n', 'AAAAAA\n', '#include "stuff"\n',
+            'AAAAAA\n', '[ atomtypes ]\n', 'AAAAA\n', '[ moleculetypes ]\n',
+            'AAAAA\n'
         ]
 
         expected = [
-            '\n', ';\n', 'AAAAAA\n', '#include "stuff"\n', 'AAAAAA\n',
-            '[ atomtypes ]\n', 'AAAAA\n',
+            '[ defaults ]\n', '\n', ';\n', 'AAAAAA\n', '#include "stuff"\n',
+            'AAAAAA\n', '[ atomtypes ]\n', 'AAAAA\n',
             '\n#include "new_included_stuff"\n[ moleculetypes ]\n', 'AAAAA\n'
         ]
 

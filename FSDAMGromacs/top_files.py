@@ -49,7 +49,7 @@ def add_include_after_FF(include_line, input_top_file, output_top_file):
 
                 # In case there is no FF include (es a parmed genereted topology)
                 if input_top_lines[i].strip()[0] == '[' and \
-                    input_top_lines[i].split(';')[0].strip() != '[ defaults ]':
+                    input_top_lines[i].split(';')[0].strip().replace(' ', '') != '[defaults]':
 
                     input_top_lines[
                         i] = f'\n#include "{include_line}"\n' + input_top_lines[
@@ -81,6 +81,23 @@ def add_include_after_atomtypes(include_line, input_top_file, output_top_file):
     must be after the force field include and only then you can add the remaining parts of the
     itp files
     """
+    def is_right_line(line):
+        """complex bool expession
+        check both for the end of [ atomtypes ] and for the beginning of a #ifdef
+        and skips [ defaults ]
+        """
+        _line = line.split(';')[0].strip()
+
+        if _line:
+            if _line[0] == '[' and \
+                _line.replace(' ', '') not in ('[atomtypes]', '[defaults]'):
+
+                return True
+
+            if _line[:6] == '#ifdef':
+                return True
+
+        return False
 
     input_top_lines = read_file.read_file(input_top_file)
 
@@ -88,19 +105,17 @@ def add_include_after_atomtypes(include_line, input_top_file, output_top_file):
 
         if input_top_lines[i].strip():
 
-            #complex bool expession
-            #check both for the end of [ atomtypes ] and for the beginning of a #ifdef
-            is_right_line = (  # pylint: disable=consider-using-ternary
-                ((input_top_lines[i].strip()[0] == '[') and
-                 (not '[ atomtypes ]' in input_top_lines[i].strip()))
-                or (input_top_lines[i].strip()[0:6] == '#ifdef'))
-
-            if is_right_line:
+            if is_right_line(input_top_lines[i]):
 
                 input_top_lines[i] = \
                 f'\n#include "{include_line}"\n{input_top_lines[i].strip()}\n'
 
                 break
+
+    # If end of file was reached try to put it in the end
+    # as last resort
+    else:
+        input_top_lines[-1] += f'\n#include "{include_line}"\n'
 
     write_file.write_file(input_top_lines, output_top_file)
 
