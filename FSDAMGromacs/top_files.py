@@ -15,6 +15,9 @@ import PythonAuxiliaryFunctions.files_IO.write_file as write_file
 def add_include_after_FF(include_line, input_top_file, output_top_file):
     """adds an include statement after the FF one
 
+    In case there is no FF include (es a parmed genereted topology) it will
+    be added after deafults
+
     Parameters
     -----------
     include_line : str
@@ -41,6 +44,16 @@ def add_include_after_FF(include_line, input_top_file, output_top_file):
                 if input_top_lines[i].strip()[0:8] == '#include':
 
                     input_top_lines[i] += f'\n#include "{include_line}"\n'
+
+                    break
+
+                # In case there is no FF include (es a parmed genereted topology)
+                if input_top_lines[i].strip()[0] == '[' and \
+                    input_top_lines[i].split(';')[0].strip() != '[ defaults ]':
+
+                    input_top_lines[
+                        i] = f'\n#include "{include_line}"\n' + input_top_lines[
+                            i]
 
                     break
 
