@@ -49,8 +49,7 @@ def add_include_after_FF(include_line, input_top_file, output_top_file):
 
                 # In case there is no FF include (es a parmed genereted topology)
                 if input_top_lines[i].strip()[0] == '[' and \
-                    input_top_lines[i].split(';')[0].strip().replace(' ', '') not in ('[defaults]',
-                        '[cmaptypes]'):
+                    input_top_lines[i].split(';')[0].strip().replace(' ', '') != '[defaults]':
 
                     input_top_lines[
                         i] = f'\n#include "{include_line}"\n' + input_top_lines[
@@ -85,13 +84,13 @@ def add_include_after_atomtypes(include_line, input_top_file, output_top_file):
     def is_right_line(line):
         """complex bool expession
         check both for the end of [ atomtypes ] and for the beginning of a #ifdef
-        and skips [ defaults ]
+        and skips [ defaults ] and [ cmaptypes ]
         """
         _line = line.split(';')[0].strip()
 
         if _line:
             if _line[0] == '[' and \
-                _line.replace(' ', '') not in ('[atomtypes]', '[defaults]'):
+                _line.replace(' ', '') not in ('[atomtypes]', '[defaults]', '[cmaptypes]'):
 
                 return True
 
