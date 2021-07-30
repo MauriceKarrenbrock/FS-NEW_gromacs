@@ -49,7 +49,8 @@ def add_include_after_FF(include_line, input_top_file, output_top_file):
 
                 # In case there is no FF include (es a parmed genereted topology)
                 if input_top_lines[i].strip()[0] == '[' and \
-                    input_top_lines[i].split(';')[0].strip().replace(' ', '') != '[defaults]':
+                    input_top_lines[i].split(';')[0].strip().replace(' ', '') not in ('[defaults]',
+                        '[cmaptypes]'):
 
                     input_top_lines[
                         i] = f'\n#include "{include_line}"\n' + input_top_lines[
