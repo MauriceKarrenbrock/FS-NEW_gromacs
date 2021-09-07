@@ -16,7 +16,7 @@ import PythonFSDAM.parse.parse_superclasses as superclasses
 from simtk import unit
 
 
-def parse_big_gromacs_xvg_files(file_name, comments=None):
+def parse_big_gromacs_xvg_files(file_name, comments=None, separator=' '):
     """parses quickly big gromacs xvg files
 
     as numpy.loadtxt is too slow to parse houndreds of files
@@ -30,6 +30,8 @@ def parse_big_gromacs_xvg_files(file_name, comments=None):
         the file to parse
     comments : interable(str), optional, default=['#', '@']
         lines in the header to jump
+    separator : str, default=' '
+        the separator of the file
 
     Returns
     -------------
@@ -54,7 +56,7 @@ def parse_big_gromacs_xvg_files(file_name, comments=None):
     output = pd.read_csv(file_name,
                          skiprows=j,
                          skipinitialspace=True,
-                         sep=' ',
+                         sep=separator,
                          header=None)
 
     return np.array(output)
@@ -199,7 +201,7 @@ class GromacsParsePullDistances(superclasses.Parser):
         # @ s12 legend "2 g 2 Y"
         # @ s13 legend "2 g 2 Z"
 
-        parsed_file = parse_big_gromacs_xvg_files(file_name)
+        parsed_file = parse_big_gromacs_xvg_files(file_name, separator='\t')
 
         #from nm to angstrom
         parsed_file = parsed_file * 10.
