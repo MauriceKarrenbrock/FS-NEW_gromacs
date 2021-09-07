@@ -245,11 +245,15 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
 
                 q_files.append(f'vdw_{mdp_type}_{i}.gro')
 
-            vdw_files = self.structure_files
+            vdw_files = [
+                pathlib.Path(i).resolve().name for i in self.structure_files
+            ]
 
         else:
 
-            q_files = self.structure_files
+            q_files = [
+                pathlib.Path(i).resolve().name for i in self.structure_files
+            ]
 
             vdw_files = []
 
