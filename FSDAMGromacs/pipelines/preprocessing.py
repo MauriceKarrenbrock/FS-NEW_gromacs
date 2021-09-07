@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-locals
 #############################################################
 # Copyright (c) 2020-2021 Maurice Karrenbrock               #
 #                                                           #
@@ -48,6 +49,8 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
     q_number_of_steps : int, optional
         number of md steps for q alchemical transformation
         the default will be ok most of the times
+    constrains : str, default all-bonds
+        possible values none h-bonds all-bonds
 
     Attributes
     ------------
@@ -103,13 +106,15 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
                  vdw_timestep_ps=None,
                  q_timestep_ps=None,
                  vdw_number_of_steps=None,
-                 q_number_of_steps=None):
+                 q_number_of_steps=None,
+                 constrains=None):
 
         super().__init__(topology_files=topology_files,
                          md_program_path=md_program_path,
                          alchemical_residue=alchemical_residue,
                          structure_files=structure_files,
-                         temperature=temperature)
+                         temperature=temperature,
+                         constrains=constrains)
 
         self.COM_pull_groups = COM_pull_groups
 
