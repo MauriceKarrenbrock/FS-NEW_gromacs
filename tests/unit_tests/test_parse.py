@@ -124,7 +124,7 @@ class TestGromacsParsePullDistances():
         assert np.testing.assert_allclose(output[2],
                                           parsed_array[:, 8] * 10.) is None
 
-        mocked_parse.assert_called_once_with('dummy_pullx.xvg')
+        mocked_parse.assert_called_once_with('dummy_pullx.xvg', separator='\t')
 
         m_list.assert_called_once()
 
