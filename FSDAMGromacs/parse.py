@@ -53,11 +53,15 @@ def parse_big_gromacs_xvg_files(file_name, comments=None, separator=' '):
 
             j += 1
 
-    output = pd.read_csv(file_name,
-                         skiprows=j,
-                         skipinitialspace=True,
-                         sep=separator,
-                         header=None)
+    try:
+        output = pd.read_csv(file_name,
+                             skiprows=j,
+                             skipinitialspace=True,
+                             sep=separator,
+                             header=None)
+
+    except Exception as e:
+        raise RuntimeError(f'Pandas could not parse {file_name}') from e
 
     return np.array(output)
 
