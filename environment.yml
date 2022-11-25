@@ -1,0 +1,16 @@
+name: FSDAMGromacs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - numpy
+  - openmm
+  - pip
+  - python
+  - mdtraj
+  - pandas
+  - MDAnalysis>=1.1.1
+  - pip:
+    - 'git+https://github.com/MauriceKarrenbrock/PythonFSDAM.git'
+    - 'git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions'
+    - 'git+https://github.com/MauriceKarrenbrock/PythonPDBStructures'

@@ -1,4 +1,8 @@
 git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git #PythonAuxiliaryFunctions
 git+https://github.com/MauriceKarrenbrock/PythonFSDAM.git #PythonFSDAM
-MDAnalysis
+git+https://github.com/MauriceKarrenbrock/PythonPDBStructures # PythonPDBStructures
+MDAnalysis>=1.1.1
 numpy
+mdtraj
+pandas
+openmm
