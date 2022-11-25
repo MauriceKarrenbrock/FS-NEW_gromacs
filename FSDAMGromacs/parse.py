@@ -68,9 +68,9 @@ def parse_big_gromacs_xvg_files(file_name, comments=None, separator=' '):
 
 class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
     """The function to parse gromacs dhdl.xvg file
-
-    this class will usually be called from
-   `PythonFSDAM.parse.parse.ParseWorkProfile` factory object
+    
+    This class will usually be called from
+    PythonFSDAM.parse.parse.ParseWorkProfile` factory object
     and inherits from `PythonFSDAM.parse.parse_superclasses.ParseWorkProfileSuperclass`
     so check the documentations for missing informations
     https://github.com/MauriceKarrenbrock/PythonFSDAM
@@ -102,8 +102,8 @@ class GromacsParseWorkProfile(superclasses.ParseWorkProfileSuperclass):
         ---------
         a 2-D array containing lambda and dh/dl (converted in Kcal/mol)
         [
-            [lambda1, lambda2, ...],
-            [dh/dl, dh/dl, ...]
+        [lambda1, lambda2, ...],
+        [dh/dl, dh/dl, ...]
         ]
 
         Notes

@@ -342,21 +342,21 @@ class PreprocessGromacsFSDAM(superclasses.PreProcessingPipeline):
         ---------
         dict
             {
-                'vdw_mdp' : path_to_vdw_mdp,
+            'vdw_mdp' : path_to_vdw_mdp,
 
-                'q_mdp' : path_to_q_mdp,
+            'q_mdp' : path_to_q_mdp,
 
-                'make_vdw_tpr' : list of commands to use to make the vdw tpr,
+            'make_vdw_tpr' : list of commands to use to make the vdw tpr,
 
-                'make_q_tpr' : list of commands to make the q tpr,
+            'make_q_tpr' : list of commands to make the q tpr,
 
-                'run_vdw' : list of commands to run the vdw tpr,
+            'run_vdw' : list of commands to run the vdw tpr,
 
-                'run_q' : list of commands to run the q tpr,
+            'run_q' : list of commands to run the q tpr,
 
-                'vdw_dhdl' : list of names of the vdw dhdl files that will be created (if you use the run commands unaltered),
+            'vdw_dhdl' : list of names of the vdw dhdl files that will be created (if you use the run commands unaltered),
 
-                'q_dhdl' : list of names of the q dhdl files that will be created (if you use the run commands unaltered),
+            'q_dhdl' : list of names of the q dhdl files that will be created (if you use the run commands unaltered),
             }
 
         Notes
