@@ -6,3 +6,4 @@ numpy
 mdtraj
 pandas
 openmm
+pymbar>=4.0.1
